@@ -1,0 +1,55 @@
+﻿<phone:PhoneApplicationPage
+    x:Class="Dice.MainPage"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:phone="clr-namespace:Microsoft.Phone.Controls;assembly=Microsoft.Phone"
+    xmlns:shell="clr-namespace:Microsoft.Phone.Shell;assembly=Microsoft.Phone"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+    mc:Ignorable="d" d:DesignWidth="480" d:DesignHeight="768" 
+    d:DataContext="{d:DesignData SampleData/MainViewModelSampleData.xaml}"
+    FontFamily="{StaticResource PhoneFontFamilyNormal}"
+    FontSize="{StaticResource PhoneFontSizeNormal}"
+    Foreground="{StaticResource PhoneForegroundBrush}"
+    SupportedOrientations="Portrait"  Orientation="Portrait"
+    shell:SystemTray.IsVisible="True">
+
+    <!--Data context is set to sample data above and LayoutRoot contains the root grid where all other page content is placed-->
+    <Grid x:Name="LayoutRoot" Background="Transparent">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+        </Grid.RowDefinitions>
+
+        <!--TitlePanel contains the name of the application and page title-->
+        <StackPanel x:Name="TitlePanel" Grid.Row="0" Margin="12,17,0,28">
+            <TextBlock x:Name="ApplicationTitle" Text="Reactive Dice" Style="{StaticResource PhoneTextNormalStyle}"/>
+            <TextBlock x:Name="PageTitle" Text="Roller" Margin="9,-7,0,0" Style="{StaticResource PhoneTextTitle1Style}"/>
+        </StackPanel>
+
+        <!--ContentPanel contains ListBox and ListBox ItemTemplate. Place additional content here-->
+        <StackPanel Grid.Row="1" Margin="12,0,12,0">
+            <Button x:Name="RollButton" Content="Roll"></Button>
+            <StackPanel Orientation="Horizontal">
+                <TextBlock VerticalAlignment="Center" Text="Side Count: "></TextBlock>
+                <TextBox x:Name="txtSideCount" Text="{Binding SideCount, Mode=TwoWay}"></TextBox>
+                <TextBlock VerticalAlignment="Center" Text="Dice Count: "></TextBlock>
+                <TextBox Text="{Binding DiceCount, Mode=TwoWay}"></TextBox>
+            </StackPanel>
+            <ListBox x:Name="MainListBox" Margin="0,0,-12,0" ItemsSource="{Binding Items}" >
+                <ListBox.ItemTemplate>
+                    <DataTemplate>
+                        <StackPanel Margin="0,0,0,17" Orientation="Horizontal">
+                            <CheckBox IsChecked="{Binding Frozen, Mode=TwoWay}"></CheckBox>
+                            <Border Margin="0,0,0,0" BorderThickness="3" BorderBrush="#FFBCB1A1" Background="AntiqueWhite" CornerRadius="10">
+
+                                <TextBlock Height="50" Width="50" Text="{Binding DotCount}" VerticalAlignment="Center" Foreground="DarkSlateGray" FontSize="40" TextAlignment="Center"></TextBlock>
+                            </Border>
+                        </StackPanel>
+                    </DataTemplate>
+                </ListBox.ItemTemplate>
+            </ListBox>
+        </StackPanel>
+    </Grid>
+ 
+</phone:PhoneApplicationPage>

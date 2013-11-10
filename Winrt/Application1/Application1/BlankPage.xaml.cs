@@ -1,0 +1,165 @@
+﻿using System;
+using System.Collections.ObjectModel;
+using System.Reactive.Linq;
+using System.Reactive.Threading.Tasks;
+using Application1.Accelerometers;
+using Application1.SimpleService;
+using Windows.UI.Core;
+using Windows.UI.Xaml.Controls;
+using Windows.UI.Xaml.Input;
+using Windows.UI.Xaml.Navigation;
+
+// The Blank Page item template is documented at http://go.microsoft.com/fwlink/?LinkId=234238
+
+namespace Application1
+{
+    /// <summary>
+    /// An empty page that can be used on its own or navigated to within a Frame.
+    /// </summary>
+    public sealed partial class BlankPage : Page
+    {
+        public BlankPage()
+        {
+            this.InitializeComponent();
+        }
+
+        /// <summary>
+        /// Invoked when this page is about to be displayed in a Frame.
+        /// </summary>
+        /// <param name="e">Event data that describes how this page was reached.  The Parameter
+        /// property is typically used to configure the page.</param>
+        protected override void OnNavigatedTo(NavigationEventArgs e)
+        {
+            //long current;
+            //Observable.Timer(TimeSpan.FromSeconds(.5), TimeSpan.FromSeconds(1))
+            //    .Do(val => current = val)
+            //    .ObserveOnDispatcher()
+            //    .Subscribe(index => PlaySound());
+
+            ConfigureDragDrop();
+            //ConfigureSimpleService();
+            ConfigureTranslator();
+        }
+
+        private void PlaySound()
+        {
+            TickSound.Play();
+        }
+
+        private void ConfigureSimpleService()
+        {
+            var svc = new SimpleService.SimpleServicesvcClient();
+            var results = new ObservableCollection<string>();
+            Translations.ItemsSource = results;
+
+            IObservable<string> inputStrings =
+                from keyup in Observable.FromEventPattern<TextChangedEventArgs>
+                    (InputText, "TextChanged")
+                .SubscribeOnDispatcher()
+                select InputText.Text;
+
+            var svcResults =
+                from text in inputStrings
+                .Throttle(TimeSpan.FromMilliseconds(100))
+                from result in svc.DoSomethingCoolAsync(new DoSomethingCoolRequest { input = text })
+                .ToObservable()
+                .TakeUntil(inputStrings)
+                select String.Format("{0} - {1}", text, result.DoSomethingCoolResult);
+
+            svcResults
+                .ObserveOnDispatcher()
+                .Subscribe(result => results.Insert(0, result));
+        }
+
+        // TODO: To use this demo, generate your own App ID.
+        // See the instructions at http://www.microsoft.com/web/post/using-the-free-bing-translation-apis
+        const string AppID = "1848A7A37C632E32B67492E22DA29125992A298C";
+        const int PressDelay = 250;
+
+        private void ConfigureTranslator()
+        {
+            var results = new ObservableCollection<string>();
+            Translations.ItemsSource = results;
+
+            IObservable<string> translationTexts =
+                (from keyup in Observable.FromEventPattern<TextChangedEventArgs>(InputText, "TextChanged")
+                 .SubscribeOnDispatcher()
+                 where !String.IsNullOrEmpty(InputText.Text)
+                 select InputText.Text);
+
+            var throttled = translationTexts
+                .Do(_ => results.Clear())
+                .Throttle(TimeSpan.FromMilliseconds(PressDelay))
+                ;
+
+            var svc = ServiceGenerator.GenerateBasic(new Uri("http://api.microsofttranslator.com/V1/soap.svc"));
+
+            var destLanguages = new string[] { "tlh", "de", "es", "zh-CHT", "fr", "it", "ar", "ht", "he", "ja", "ko", "no", "ru", "th" };
+            var query =
+                from text in throttled
+                from lang in destLanguages.ToObservable()
+                from translation in svc.TranslateAsync(
+                   new BingTranslatorService.TranslateRequest(AppID, text, "en-us", lang))
+                   .ToObservable()
+                    //.ObserveOnDispatcher()
+                  .TakeUntil(translationTexts)
+                select String.Format("{0} - {1}", lang, translation.TranslateResult);
+
+            query.ObserveOnDispatcher()
+                .Subscribe(trans => results.Add(trans),
+                ex => Error.Text = ex.Message);
+
+        }
+
+        private void ConfigureDragDrop()
+        {
+            var pointerDown = from evt in Observable.FromEventPattern<PointerRoutedEventArgs>(Logo, "PointerPressed")
+                              select evt.EventArgs.GetCurrentPoint(Logo);
+            var pointerUp = Observable.FromEventPattern<PointerRoutedEventArgs>(this, "PointerReleased");
+            var pointerMove = from evt in Observable.FromEventPattern<PointerRoutedEventArgs>(this, "PointerMoved")
+                              select evt.EventArgs.GetCurrentPoint(RootCanvas);
+
+            var q = from startLocation in pointerDown
+                    from endLocation in pointerMove.TakeUntil(pointerUp)
+                    select new
+                    {
+                        X = endLocation.Position.X - startLocation.Position.X,
+                        Y = endLocation.Position.Y - startLocation.Position.Y
+                    };
+            q.Subscribe(delta =>
+                {
+                    Canvas.SetLeft(Logo, delta.X);
+                    Canvas.SetTop(Logo, delta.Y);
+                });
+        }
+
+        void Logo_PointerPressed(object sender, PointerRoutedEventArgs e)
+        {
+            throw new NotImplementedException();
+        }
+
+        IDisposable subscribed = null;
+        private void AccelButton_Click(object sender, Windows.UI.Xaml.RoutedEventArgs e)
+        {
+
+            if (subscribed == null)
+            {
+                IObservable<Vector3> accelReadings;
+                accelReadings = AccelerometerObservable.GetAccelerometer();
+
+                subscribed = accelReadings.Subscribe(args =>
+                {
+                    Single multiplier = 100;
+                    ButtonTransform.X = args.X * multiplier;
+                    ButtonTransform.Y = args.Y * multiplier;
+
+                });
+            }
+            else
+            {
+                subscribed.Dispose();
+                subscribed = null;
+            }
+        }
+    }
+}

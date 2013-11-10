@@ -1,0 +1,27 @@
+﻿<!DOCTYPE html>
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+    <title></title>
+    <script src="Scripts/rx.js" type="text/javascript"></script>
+
+</head>
+<body>
+    <div id="content"></div>
+</body>
+
+    <script type="text/javascript">
+        var label = document.getElementById("content");
+
+        var nums = Rx.Observable.range(0, 10);
+        var query = nums
+                    .where(function (v) { return v % 2 === 0; })
+                    .select(function (v) { return v; });
+
+
+        var sub = query.subscribe(function (v) { label.innerHTML += v; },
+            function (err) { },
+            function () { });
+        sub.dispose();
+    </script>
+</html>

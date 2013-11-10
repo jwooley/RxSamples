@@ -1,0 +1,69 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio 2012
+Project("{F184B08F-C81C-45F6-A57F-5ABD9991F28F}") = "Sensor", "ObservableSensor\Sensor.vbproj", "{760502A5-07B6-4734-979D-320A4E89F867}"
+EndProject
+Project("{F184B08F-C81C-45F6-A57F-5ABD9991F28F}") = "ObservableClient", "ObservableClient\ObservableClient.vbproj", "{594467DD-FC32-4589-B1FD-EE59709516BF}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{E1D8C2DC-8A0C-4A90-B063-88C075621CF6}"
+	ProjectSection(SolutionItems) = preProject
+		..\Becoming a rX Pusher.pptx = ..\Becoming a rX Pusher.pptx
+	EndProjectSection
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = ".nuget", ".nuget", "{24A69B00-9B73-423F-A1FD-402B330178F1}"
+	ProjectSection(SolutionItems) = preProject
+		.nuget\packages.config = .nuget\packages.config
+	EndProjectSection
+EndProject
+Global
+	GlobalSection(TeamFoundationVersionControl) = preSolution
+		SccNumberOfProjects = 4
+		SccEnterpriseProvider = {4CA58AB2-18FA-4F8D-95D4-32DDF27D184C}
+		SccTeamFoundationServer = http://wooleyhomesvr:8080/tfs/defaultcollection
+		SccLocalPath0 = .
+		SccProjectUniqueName1 = ObservableClient\\ObservableClient.vbproj
+		SccProjectName1 = ObservableClient
+		SccLocalPath1 = ObservableClient
+		SccProjectUniqueName2 = ObservableSensor\\Sensor.vbproj
+		SccProjectName2 = ObservableSensor
+		SccLocalPath2 = ObservableSensor
+		SccWebProject3 = true
+		SccProjectUniqueName3 = ..\\WebSite
+		SccProjectName3 = ../WebSite
+		SccLocalPath3 = ..\\WebSite
+		SccProjectEnlistmentChoice3 = 2
+	EndGlobalSection
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Debug|Mixed Platforms = Debug|Mixed Platforms
+		Debug|x86 = Debug|x86
+		Release|Any CPU = Release|Any CPU
+		Release|Mixed Platforms = Release|Mixed Platforms
+		Release|x86 = Release|x86
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{760502A5-07B6-4734-979D-320A4E89F867}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{760502A5-07B6-4734-979D-320A4E89F867}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{760502A5-07B6-4734-979D-320A4E89F867}.Debug|Mixed Platforms.ActiveCfg = Debug|Any CPU
+		{760502A5-07B6-4734-979D-320A4E89F867}.Debug|Mixed Platforms.Build.0 = Debug|Any CPU
+		{760502A5-07B6-4734-979D-320A4E89F867}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{760502A5-07B6-4734-979D-320A4E89F867}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{760502A5-07B6-4734-979D-320A4E89F867}.Release|Any CPU.Build.0 = Release|Any CPU
+		{760502A5-07B6-4734-979D-320A4E89F867}.Release|Mixed Platforms.ActiveCfg = Release|Any CPU
+		{760502A5-07B6-4734-979D-320A4E89F867}.Release|Mixed Platforms.Build.0 = Release|Any CPU
+		{760502A5-07B6-4734-979D-320A4E89F867}.Release|x86.ActiveCfg = Release|Any CPU
+		{594467DD-FC32-4589-B1FD-EE59709516BF}.Debug|Any CPU.ActiveCfg = Debug|x86
+		{594467DD-FC32-4589-B1FD-EE59709516BF}.Debug|Mixed Platforms.ActiveCfg = Debug|x86
+		{594467DD-FC32-4589-B1FD-EE59709516BF}.Debug|Mixed Platforms.Build.0 = Debug|x86
+		{594467DD-FC32-4589-B1FD-EE59709516BF}.Debug|x86.ActiveCfg = Debug|x86
+		{594467DD-FC32-4589-B1FD-EE59709516BF}.Debug|x86.Build.0 = Debug|x86
+		{594467DD-FC32-4589-B1FD-EE59709516BF}.Release|Any CPU.ActiveCfg = Release|x86
+		{594467DD-FC32-4589-B1FD-EE59709516BF}.Release|Mixed Platforms.ActiveCfg = Release|x86
+		{594467DD-FC32-4589-B1FD-EE59709516BF}.Release|Mixed Platforms.Build.0 = Release|x86
+		{594467DD-FC32-4589-B1FD-EE59709516BF}.Release|x86.ActiveCfg = Release|x86
+		{594467DD-FC32-4589-B1FD-EE59709516BF}.Release|x86.Build.0 = Release|x86
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+EndGlobal

@@ -1,0 +1,16 @@
+<local:MainViewModel 
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"       
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:local="clr-namespace:BingTranslatorRxVb" 
+    >
+
+    <local:MainViewModel.Items>
+        <local:ItemViewModel Key="la" Value="Maecenas praesent accumsan bibendum" />
+        <local:ItemViewModel Key="es" Value="Pharetra placerat pulvinar sagittis senectus sociosqu suscipit torquent ultrices vehicula volutpat maecenas praesent"/>
+        <local:ItemViewModel Key="kl" Value="Habitant inceptos interdum lobortis"/>
+        <local:ItemViewModel Key="c#" Value="foo =&gt; foo.bar"/>
+        <local:ItemViewModel Key="vb" Value="Function(foo) foo.bar"/>
+        <local:ItemViewModel Key="rb" Value="Senectus sociosqu suscipit torquent ultrices vehicula volutpat maecenas praesent accumsan bibendum dictumst eleifend"/>
+    </local:MainViewModel.Items>
+
+</local:MainViewModel>

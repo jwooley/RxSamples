@@ -1,0 +1,83 @@
+﻿<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+    <title>RxJs Observable Sensor</title>
+    <script type="text/javascript" src="Scripts/jquery-1.4.1.js"></script>
+    <script type="text/javascript" src="Scripts/rx.js"></script>
+</head>
+<body>
+    <p>
+        <button id="btnLowValueSensors">Show Low Values</button>
+        <button id="btnSelectedTypeSensors">Show Type x Values</button>
+        <button id="btnWarnOutliers">Warn Outliers</button>
+        <button id="btnHeartbeat">Heartbeat</button>
+    </p>
+    <div style="color: Blue; overflow-y: scroll; max-height: 600px; display: block; float: left;">
+        Low Value Sensors:
+        <ul id="LowValueSensors"></ul>
+    </div>
+    <blink id="OutOfRange" style="color:Red; text-align:center;"></blink>
+    <div style="color: Red; overflow-y: scroll; max-height: 600px; display: block; float: right;">
+        Type 2 Sensors:
+        <ul id="SelectedTypeSensors"></ul>
+    </div>
+
+    <script type="text/javascript">
+        var sensor;
+        var lowValueSubsription;
+
+        $(function () {
+            sensor = Rx.Observable.GenerateWithTime(0,
+                function (i) { return true; },
+                function (i) { return i; },
+                function (i) { return { type: Math.floor(Math.random() * 4), value: Math.random() * 20, timeStamp: new Date() }; },
+                function (i) { return Math.random() * 200; }
+            );
+
+            $("#btnLowValueSensors").click(function (e) {
+                if (lowValueSubsription) {
+                    lowValueSubsription.Dispose();
+                    lowValueSubsription = null;
+                }
+                else {
+                    var query = sensor
+                        .Where(function (s) { return (s.value < 2) });
+
+                    lowValueSubsription = query.Subscribe(function (next) {
+                        $("<li/>").html(next.timeStamp + " - " + next.type + ": " + next.value).appendTo("#LowValueSensors");
+                    });
+                };
+            });
+
+            $("#btnSelectedTypeSensors").click(function (e) {
+                var query = sensor.Where(function (next) { return (next.type == "2"); });
+                query.Subscribe(function (next) {
+                    $("<li/>").html(next.timeStamp + " - " + next.type + ": " + next.value).appendTo("#SelectedTypeSensors");
+                });
+            });
+
+            $("#btnWarnOutliers").click(function (e) {
+                sensor
+                    .Where(function (next) { return next.value > 19; })
+                    .Take(1)
+                    .Subscribe(function (next) {
+                        $("blink").text(next.value + " Happened");
+                    });
+            });
+
+            $("#btnHeartbeat").click(function (e) {
+                var heartbeat = sensor
+                    .Where(function (next) { return next.type = "2"; })
+                    .BufferWithTime(3000);
+
+                heartbeat.Subscribe(function (next) {
+                    var typesPerSecond = next.length;
+                    $("#btnHeartbeat").html(typesPerSecond);
+                });
+            });
+
+        });
+
+    </script>
+</body>
+</html>

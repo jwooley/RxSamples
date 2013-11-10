@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ReferenceGroup xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema" ID="4fdf8c8e-6100-4d8b-8360-cbe3966010d1" xmlns="urn:schemas-microsoft-com:xml-wcfservicemap">
+  <ClientOptions>
+    <GenerateAsynchronousMethods>true</GenerateAsynchronousMethods>
+    <EnableDataBinding>true</EnableDataBinding>
+    <ExcludedTypes />
+    <ImportXmlTypes>false</ImportXmlTypes>
+    <GenerateInternalTypes>false</GenerateInternalTypes>
+    <GenerateMessageContracts>false</GenerateMessageContracts>
+    <NamespaceMappings />
+    <CollectionMappings>
+      <CollectionMapping TypeName="System.Collections.ObjectModel.ObservableCollection`1" Category="List" />
+    </CollectionMappings>
+    <GenerateSerializableTypes>false</GenerateSerializableTypes>
+    <Serializer>Auto</Serializer>
+    <UseSerializerForFaults>true</UseSerializerForFaults>
+    <ReferenceAllAssemblies>true</ReferenceAllAssemblies>
+    <ReferencedAssemblies />
+    <ReferencedDataContractTypes />
+    <ServiceContractMappings />
+  </ClientOptions>
+  <MetadataSources>
+    <MetadataSource Address="http://localhost:19500/LongRunningService.svc" Protocol="http" SourceId="1" />
+  </MetadataSources>
+  <Metadata>
+    <MetadataFile FileName="LongRunningService.disco" MetadataType="Disco" ID="10968277-4633-4dbb-af67-831a168de684" SourceId="1" SourceUrl="http://localhost:19500/LongRunningService.svc?disco" />
+    <MetadataFile FileName="LongRunningService.wsdl" MetadataType="Wsdl" ID="9bdcc9b2-5711-4ef1-96c7-8b835c24a10c" SourceId="1" SourceUrl="http://localhost:19500/LongRunningService.svc?wsdl" />
+    <MetadataFile FileName="LongRunningService.xsd" MetadataType="Schema" ID="7f2249f6-9643-4669-bb82-7a29e122768a" SourceId="1" SourceUrl="http://localhost:19500/LongRunningService.svc?xsd=xsd1" />
+    <MetadataFile FileName="LongRunningService1.xsd" MetadataType="Schema" ID="c9094760-7e2a-44a8-a900-fa335232021f" SourceId="1" SourceUrl="http://localhost:19500/LongRunningService.svc?xsd=xsd0" />
+  </Metadata>
+  <Extensions>
+    <ExtensionFile FileName="configuration91.svcinfo" Name="configuration91.svcinfo" />
+    <ExtensionFile FileName="configuration.svcinfo" Name="configuration.svcinfo" />
+  </Extensions>
+</ReferenceGroup>

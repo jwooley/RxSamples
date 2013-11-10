@@ -1,0 +1,19 @@
+﻿<Solution Format="0.0.0.3">
+  <Version>2012-07-29T20:05:07.1015689Z</Version>
+  <Project Path="C:\Projects\Reactive\WP7RxSamples\PhoneTranslator\PhoneTranslator\PhoneTranslator.csproj" />
+  <Project Path="C:\Projects\Reactive\SilverlightApplication1\SilverlightApplication1\SilverlightApplication1.csproj" />
+  <Project Path="C:\Projects\Reactive\SignalR\RxSignalR\BasicConsole\BasicConsole.vbproj" />
+  <Project Path="C:\Projects\Reactive\Winrt\Application1\Application1\Reactive-Rt.csproj" />
+  <Project Path="C:\Projects\Reactive\SignalR\RxSignalR\WpfSharp\WpfSharp.csproj" />
+  <Project Path="C:\Projects\Reactive\WP7RxSamples\WP7AccelerometerSample\WP7AccelerometerSample\WP7AccelerometerSample.csproj" />
+  <Project Path="C:\Projects\Reactive\ObservableSensor\ObservableSensor\Sensor.vbproj" />
+  <Project Path="C:\Projects\Reactive\SilverlightApplication1\SilverlightApplication1.Web\SilverlightApplication1.Web.csproj" />
+  <Project Path="C:\Projects\RX\Dice\Dice\Dice.csproj">
+    <Reference Path="C:\Projects\RX\Dice\Gestures\Gestures.vbproj" />
+  </Project>
+  <Project Path="C:\Projects\Reactive\ObservableSensor\ObservableClient\ObservableClient.vbproj">
+    <Reference Path="C:\Projects\Reactive\ObservableSensor\ObservableSensor\Sensor.vbproj" />
+  </Project>
+  <Project Path="C:\Projects\Reactive\WP7RxSamples\PhoneDragDrop\PhoneDragDrop\PhoneDragDrop.csproj" />
+  <Project Path="C:\Projects\RX\Dice\Gestures\Gestures.vbproj" />
+</Solution>

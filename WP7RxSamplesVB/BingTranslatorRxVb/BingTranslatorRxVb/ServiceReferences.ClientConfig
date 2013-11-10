@@ -1,0 +1,20 @@
+﻿<configuration>
+    <system.serviceModel>
+        <bindings>
+            <basicHttpBinding>
+                <binding name="BasicHttpBinding_LanguageService" maxBufferSize="2147483647"
+                    maxReceivedMessageSize="2147483647">
+                    <security mode="None" />
+                </binding>
+            </basicHttpBinding>
+        </bindings>
+        <client>
+            <endpoint address="http://api.microsofttranslator.com/V1/soap.svc"
+                binding="basicHttpBinding" bindingConfiguration="BasicHttpBinding_LanguageService"
+                contract="BingTranslatorService.LanguageService" name="BasicHttpBinding_LanguageService" />
+            <!--<endpoint address="http://api.microsofttranslator.com/V1/soap.svc"
+                binding="basicHttpBinding" bindingConfiguration="BasicHttpBinding_LanguageService"
+                contract="BingTranslatorService.LanguageService" name="BasicHttpBinding_LanguageService1" />-->
+        </client>
+    </system.serviceModel>
+</configuration>

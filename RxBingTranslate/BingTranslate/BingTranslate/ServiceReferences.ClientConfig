@@ -1,0 +1,18 @@
+﻿<configuration>
+    <system.serviceModel>
+        <bindings>
+            <basicHttpBinding>
+                <binding name="BingPortBinding" maxBufferSize="2147483647" maxReceivedMessageSize="2147483647">
+                    <security mode="None">
+                        <message algorithmSuite="Default" />
+                    </security>
+                </binding>
+            </basicHttpBinding>
+        </bindings>
+        <client>
+            <endpoint address="http://api.search.live.net:80/soap.asmx" binding="basicHttpBinding"
+                bindingConfiguration="BingPortBinding" contract="BingTranslate.Service.BingPortType"
+                name="BingPort" />
+        </client>
+    </system.serviceModel>
+</configuration>

@@ -1,0 +1,12 @@
+﻿<Window x:Class="EnumerableObservable.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="MainWindow" Height="350" Width="525">
+    <StackPanel>
+        <Button x:Name="EnumButton" Content="AsEnumerable" Width="100" Margin="5" Click="Enumerable_Click"></Button>
+        <Button x:Name="ObsButton" Content="AsObservable" Width="100" Margin="5" Click="Observable_Click"></Button>
+        <Button x:Name="ClickTestButton" Content="Click Test" Width="100" Margin="5" ></Button>
+        <TextBlock  x:Name="TotalTime" Text="TotalTime: "></TextBlock>
+        <ListBox x:Name="Results" ></ListBox>
+    </StackPanel>
+</Window>

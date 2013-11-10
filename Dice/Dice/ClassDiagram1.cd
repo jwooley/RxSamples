@@ -1,0 +1,36 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<ClassDiagram MajorVersion="1" MinorVersion="1">
+  <Class Name="Dice.MainViewModel">
+    <Position X="0.5" Y="0.5" Width="2" />
+    <TypeIdentifier>
+      <HashCode>AAAAIAAAAAAQCIEAAAIAAAAEgAAAAAAAAAAgAAAACAA=</HashCode>
+      <FileName>ViewModels\MainViewModel.cs</FileName>
+    </TypeIdentifier>
+    <Lollipop Position="0.2" />
+  </Class>
+  <Class Name="Dice.Die">
+    <Position X="3.25" Y="0.5" Width="2" />
+    <TypeIdentifier>
+      <HashCode>AAAgAAAAAAAAAIAAAAAAgQAAgAAAAAAAAAEABAAhAAA=</HashCode>
+      <FileName>ViewModels\Die.cs</FileName>
+    </TypeIdentifier>
+    <Lollipop Position="0.2" />
+  </Class>
+  <Interface Name="System.Collections.IEnumerator">
+    <Position X="7.25" Y="2" Width="1.5" />
+    <TypeIdentifier />
+  </Interface>
+  <Interface Name="System.Collections.IEnumerable">
+    <Position X="7.25" Y="0.5" Width="1.5" />
+    <TypeIdentifier />
+  </Interface>
+  <Interface Name="System.IObserver&lt;T&gt;">
+    <Position X="9.25" Y="2" Width="1.5" />
+    <TypeIdentifier />
+  </Interface>
+  <Interface Name="System.IObservable&lt;T&gt;">
+    <Position X="9.25" Y="0.5" Width="1.5" />
+    <TypeIdentifier />
+  </Interface>
+  <Font Name="Segoe UI" Size="9" />
+</ClassDiagram>

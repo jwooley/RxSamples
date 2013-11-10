@@ -1,0 +1,25 @@
+﻿<navigation:Page x:Class="SilverlightApplication1.Sensor"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+       xmlns:navigation="clr-namespace:System.Windows.Controls;assembly=System.Windows.Controls.Navigation"
+          
+    mc:Ignorable="d"
+    d:DesignHeight="460" d:DesignWidth="400">
+    <navigation:Page.Resources>
+        <Style TargetType="Button">
+            <Setter Property="Width" Value="150" />
+            <Setter Property="Margin" Value="5" />
+        </Style>
+    </navigation:Page.Resources>
+    <StackPanel>
+        <Button Name="Start" Content="Start" Click="Start_Click" />
+        <Button Name="FilterLowValue" Content="Filter Low Values" Click="FilterLowValue_Click" />
+        <Button Name="FilterFirstType" Content="Filter First Type" Click="FilterFirstType_Click" />
+        <Button Name="QueryAny" Content="Test Any" Click="QueryAny_Click" />
+        <Button Name="Heartbeat" Content="Test Throttle" Click="Heartbeat_Click" />
+        <Button Name="Stop" Content="Stop" Click="Stop_Click" />
+        <ListBox Name="FilteredList" />
+    </StackPanel>
+</navigation:Page>

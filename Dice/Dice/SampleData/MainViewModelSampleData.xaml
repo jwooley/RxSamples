@@ -1,0 +1,15 @@
+<local:MainViewModel 
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"       
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:local="clr-namespace:Dice" >
+    <local:MainViewModel.DiceCount>5</local:MainViewModel.DiceCount>
+    <local:MainViewModel.SideCount>6</local:MainViewModel.SideCount>
+    <local:MainViewModel.Items>
+        <local:Die Index="1" DotCount="1" Frozen="false"/>
+        <local:Die Index="2" DotCount="2" Frozen="false"/>
+        <local:Die Index="3" DotCount="3" Frozen="false"/>
+        <local:Die Index="4" DotCount="4" Frozen="false"/>
+        <local:Die Index="5" DotCount="5" Frozen="true"/>
+    </local:MainViewModel.Items>
+    
+</local:MainViewModel>

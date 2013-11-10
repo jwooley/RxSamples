@@ -1,0 +1,45 @@
+﻿<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+    <title></title>
+    <script type="text/javascript" src="Scripts/rx.js"></script>
+    <script type="text/javascript" src="Scripts/jquery-1.4.1.js"></script>
+    <script type="text/javascript" src="Scripts/rx.jQuery.js"></script>
+
+    <script type="text/javascript">
+        $(document).ready(function () {
+            var dragTarget = $("img");
+            var mouseUp = dragTarget.toObservable("mouseup");
+            var mouseMove = dragTarget.toObservable("mousemove");
+            var mouseDown = dragTarget.toObservable("mousedown")
+                .Select(function (event) {
+                    return {
+                        left: event.clientX - dragTarget.offset().left,
+                        top: event.clientY - dragTarget.offset().top
+                    };
+                });
+
+            var moves = mouseDown.SelectMany(function (imageOffset) {
+                return mouseMove
+                        .Do(function (event) { event.preventDefault(); })
+                        .Select(function (pos) {
+                            return {
+                                target: dragTarget,
+                                left: pos.clientX - imageOffset.left,
+                                top: pos.clientY - imageOffset.top
+                            };
+                        })
+                        .TakeUntil(mouseUp);
+            });
+            moves.Subscribe(function (pos) {
+                pos.target.css("left", pos.left);
+                pos.target.css("top", pos.top);
+            });
+        });
+    </script>
+</head>
+<body>
+    <img alt="logo" src="Images/RxLogo.png" style="position: absolute; top:400; left:400; height: 100;
+        width: 100" id="RxLogo" />
+</body>
+</html>

@@ -1,0 +1,48 @@
+﻿<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8" />
+    <title>WinJsChat</title>
+
+    <!-- WinJS references -->
+    <link href="//Microsoft.WinJS.2.0.Preview/css/ui-dark.css" rel="stylesheet" />
+    <script src="//Microsoft.WinJS.2.0.Preview/js/base.js"></script>
+    <script src="//Microsoft.WinJS.2.0.Preview/js/ui.js"></script>
+
+    <!-- WinJsChat references -->
+    <link href="/css/default.css" rel="stylesheet" />
+    <script src="/js/default.js"></script>
+    <script src="/Scripts/jquery-1.6.4.min.js" ></script
+    <script src="/Scripts/jquery.signalR-0.5.3.min.js" ></script>
+
+     <script type="text/javascript">
+         $(function () {
+             // Proxy created on the fly
+             $.connection.chat.url = 'http://localhost:5687/signalr';
+             $.connection.chat.start();
+
+             var chat = $.connection.chat;
+
+             // Declare a function on the chat hub so the server can invoke it
+             chat.addMessage = function (message) {
+                 $('#messages').append('<li>' + message + '</li>');
+             };
+
+             $("#broadcast").click(function () {
+                 // Call the chat method on the server
+                 chat.send($('#msg').val());
+             });
+
+             // Start the connection
+             $.connection.hub.start();
+         });
+    </script>
+</head>
+<body>
+        <input type="text" id="msg" />
+    <input type="button" id="broadcast" value="broadcast" />
+
+    <ul id="messages">
+    </ul>
+</body>
+</html>
