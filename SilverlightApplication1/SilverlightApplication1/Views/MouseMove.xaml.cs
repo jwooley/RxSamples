@@ -10,6 +10,7 @@ using System.Windows.Media;
 using System.Windows.Media.Animation;
 using System.Windows.Shapes;
 using System.Windows.Navigation;
+using System.Reactive.Linq;
 
 namespace SilverlightApplication1.Views
 {
@@ -24,10 +25,10 @@ namespace SilverlightApplication1.Views
         protected override void OnNavigatedTo(NavigationEventArgs e)
         {
             
-            var mouseDown = from evt in Observable.FromEvent<MouseButtonEventArgs>(image, "MouseLeftButtonDown")
+            var mouseDown = from evt in Observable.FromEventPattern<MouseButtonEventArgs>(image, "MouseLeftButtonDown")
                             select evt.EventArgs.GetPosition(image);
-            var mouseUp = Observable.FromEvent<MouseButtonEventArgs>(this, "MouseLeftButtonUp");
-            var mouseMove = Observable.FromEvent<MouseEventArgs>(this, "MouseMove")
+            var mouseUp = Observable.FromEventPattern<MouseButtonEventArgs>(this, "MouseLeftButtonUp");
+            var mouseMove = Observable.FromEventPattern<MouseEventArgs>(this, "MouseMove")
                 .Select(evt => evt.EventArgs.GetPosition(this));
 
             var q = from startLocation in mouseDown

@@ -19,6 +19,10 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Reactive-Rt", "Winrt\Applic
 EndProject
 Project("{E24C65DC-7377-472B-9ABA-BC803B73C61A}") = "Service", "http://localhost:58836", "{1CE19FB8-5F03-4245-A772-4891614F97AA}"
 	ProjectSection(WebsiteProperties) = preProject
+		SccProjectName = "SAK"
+		SccAuxPath = "SAK"
+		SccLocalPath = "SAK"
+		SccProvider = "SAK"
 		UseIISExpress = "true"
 		TargetFrameworkMoniker = ".NETFramework,Version%3Dv4.5"
 		Debug.AspNetCompiler.VirtualPath = "/localhost_58836"
@@ -42,7 +46,7 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PhoneDragDrop", "WP7RxSampl
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WP7AccelerometerSample", "WP7RxSamples\WP7AccelerometerSample\WP7AccelerometerSample\WP7AccelerometerSample.csproj", "{C8C15319-7086-4F05-A523-3D5DB4792317}"
 EndProject
-Project("{E24C65DC-7377-472B-9ABA-BC803B73C61A}") = "RxJs.Website", "RxJs.Website", "{0322501E-C95C-4557-936F-6635B212338E}"
+Project("{E24C65DC-7377-472B-9ABA-BC803B73C61A}") = "RxJs.Website", "RxJs.Website\", "{0322501E-C95C-4557-936F-6635B212338E}"
 	ProjectSection(WebsiteProperties) = preProject
 		TargetFrameworkMoniker = ".NETFramework,Version%3Dv4.0"
 		Debug.AspNetCompiler.VirtualPath = "/RxJs.Website"
@@ -60,6 +64,7 @@ Project("{E24C65DC-7377-472B-9ABA-BC803B73C61A}") = "RxJs.Website", "RxJs.Websit
 		Release.AspNetCompiler.FixedNames = "false"
 		Release.AspNetCompiler.Debug = "False"
 		VWDPort = "2870"
+		SlnRelativePath = "RxJs.Website\"
 	EndProjectSection
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Dice", "..\RX\Dice\Dice\Dice.csproj", "{8CD64B05-AE45-49FB-A09B-32EDCD6DAEA2}"
@@ -73,7 +78,7 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PhoneTranslator", "WP7RxSam
 EndProject
 Project("{F184B08F-C81C-45F6-A57F-5ABD9991F28F}") = "BasicConsole", "SignalR\RxSignalR\BasicConsole\BasicConsole.vbproj", "{DB4DE111-4C53-43E0-894A-5D3B0C54A782}"
 EndProject
-Project("{E24C65DC-7377-472B-9ABA-BC803B73C61A}") = "RxSignalrWeb(1)", "SignalR\RxSignalR\RxSignalrWeb", "{227B78EB-FD4A-44FC-89AC-6EE2C461C4CC}"
+Project("{E24C65DC-7377-472B-9ABA-BC803B73C61A}") = "RxSignalrWeb(1)", "SignalR\RxSignalR\RxSignalrWeb\", "{227B78EB-FD4A-44FC-89AC-6EE2C461C4CC}"
 	ProjectSection(WebsiteProperties) = preProject
 		TargetFrameworkMoniker = ".NETFramework,Version%3Dv4.5"
 		Debug.AspNetCompiler.VirtualPath = "/RxSignalrWeb"
@@ -91,12 +96,17 @@ Project("{E24C65DC-7377-472B-9ABA-BC803B73C61A}") = "RxSignalrWeb(1)", "SignalR\
 		Release.AspNetCompiler.FixedNames = "false"
 		Release.AspNetCompiler.Debug = "False"
 		VWDPort = "4734"
+		SlnRelativePath = "SignalR\RxSignalR\RxSignalrWeb\"
 	EndProjectSection
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WpfSharp", "SignalR\RxSignalR\WpfSharp\WpfSharp.csproj", "{D24BD347-374B-4304-8C76-0D8008651FC9}"
 EndProject
 Project("{E24C65DC-7377-472B-9ABA-BC803B73C61A}") = "Service(1)", "http://localhost:49152", "{718F914C-7300-4AD0-92B3-3CDEF3FE753D}"
 	ProjectSection(WebsiteProperties) = preProject
+		SccProjectName = "SAK"
+		SccAuxPath = "SAK"
+		SccLocalPath = "SAK"
+		SccProvider = "SAK"
 		UseIISExpress = "true"
 		TargetFrameworkMoniker = ".NETFramework,Version%3Dv4.0"
 		Debug.AspNetCompiler.VirtualPath = "/Service"

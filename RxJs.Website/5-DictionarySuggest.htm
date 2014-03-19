@@ -3,8 +3,9 @@
 <html xmlns="http://www.w3.org/1999/xhtml">
 <head>
     <title></title>
-    <script src="Scripts/jquery-2.0.3.min.js"></script>
+    <script type="text/javascript" src="Scripts/jquery-2.1.0.js"></script>
     <script type="text/javascript" src="Scripts/rx.js"></script>
+    <script type="text/javascript" src="Scripts/rx.lite.compat.js"></script>
     <script type="text/javascript" src="Scripts/rx.jquery.js"></script>
 </head>
 <body>
@@ -16,13 +17,14 @@
     <script type="text/javascript">
         (function ($) {
 
-            var textInputDetected = $("#TextToTranslate")
-                .toObservable('keyup')
-                .Select(function () {
-                    $("#TextToTranslate").val();
-                });
+            var textInputDetected = Rx.Observable.fromEvent($("#TextToTranslate"), 'keyup')
+                .throttle(250)
+                .select(function () {
+                    return $("#TextToTranslate").val();
+                })
+                .distinctUntilChanged();
 
-            d = textInputDetected.Subscribe(function (x) {
+            d = textInputDetected.subscribe(function (x) {
                 $("#output").append(x + '<br />');
             });
 

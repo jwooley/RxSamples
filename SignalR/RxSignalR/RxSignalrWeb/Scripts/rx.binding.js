@@ -1,11 +1,23 @@
 // Copyright (c) Microsoft Open Technologies, Inc. All rights reserved. See License.txt in the project root for license information.
 
-(function (root, factory) {
-    var freeExports = typeof exports == 'object' && exports,
-        freeModule = typeof module == 'object' && module && module.exports == freeExports && module,
-        freeGlobal = typeof global == 'object' && global;
-    if (freeGlobal.global === freeGlobal) {
-        window = freeGlobal;
+;(function (factory) {
+    var objectTypes = {
+        'boolean': false,
+        'function': true,
+        'object': true,
+        'number': false,
+        'string': false,
+        'undefined': false
+    };
+
+    var root = (objectTypes[typeof window] && window) || this,
+        freeExports = objectTypes[typeof exports] && exports && !exports.nodeType && exports,
+        freeModule = objectTypes[typeof module] && module && !module.nodeType && module,
+        moduleExports = freeModule && freeModule.exports === freeExports && freeExports,
+        freeGlobal = objectTypes[typeof global] && global;
+    
+    if (freeGlobal && (freeGlobal.global === freeGlobal || freeGlobal.window === freeGlobal)) {
+        root = freeGlobal;
     }
 
     // Because of build optimizers
@@ -19,21 +31,21 @@
     } else {
         root.Rx = factory(root, {}, root.Rx);
     }
-}(this, function (global, exp, Rx, undefined) {
+}.call(this, function (root, exp, Rx, undefined) {
     
     var Observable = Rx.Observable,
         observableProto = Observable.prototype,
-        AnonymousObservable = Rx.Internals.AnonymousObservable,
+        AnonymousObservable = Rx.AnonymousObservable,
         Subject = Rx.Subject,
         AsyncSubject = Rx.AsyncSubject,
         Observer = Rx.Observer,
-        ScheduledObserver = Rx.Internals.ScheduledObserver,
+        ScheduledObserver = Rx.internals.ScheduledObserver,
         disposableCreate = Rx.Disposable.create,
         disposableEmpty = Rx.Disposable.empty,
         CompositeDisposable = Rx.CompositeDisposable,
         currentThreadScheduler = Rx.Scheduler.currentThread,
-        inherits = Rx.Internals.inherits,
-        addProperties = Rx.Internals.addProperties;
+        inherits = Rx.internals.inherits,
+        addProperties = Rx.internals.addProperties;
 
     // Utilities
     var objectDisposed = 'Object has been disposed';
@@ -49,8 +61,8 @@
      * invocation. For specializations with fixed subject types, see Publish, PublishLast, and Replay.
      * 
      * @example
-     * var res = source.multicast(observable);
-     * var res = source.multicast(function () { return new Subject(); }, function (x) { return x; });
+     * 1 - res = source.multicast(observable);
+     * 2 - res = source.multicast(function () { return new Subject(); }, function (x) { return x; });
      * 
      * @param {Function|Subject} subjectOrSubjectSelector 
      * Factory function to create an intermediate subject through which the source sequence's elements will be multicast to the selector function.
@@ -75,7 +87,7 @@
      * This operator is a specialization of Multicast using a regular Subject.
      * 
      * @example
-     * var res = source.publish();
+     * var resres = source.publish();
      * var res = source.publish(function (x) { return x; });
      * 
      * @param {Function} [selector] Selector function which can use the multicasted source sequence as many times as needed, without causing multiple subscriptions to the source sequence. Subscribers to the given source will receive all notifications of the source from the time of the subscription on.
@@ -87,6 +99,19 @@
             this.multicast(function () {
                 return new Subject();
             }, selector);
+    };
+
+    /**
+     * Returns an observable sequence that shares a single subscription to the underlying sequence.
+     * This operator is a specialization of publish which creates a subscription when the number of observers goes from zero to one, then shares that subscription with all subsequent observers until the number of observers returns to zero, at which point the subscription is disposed.
+     * 
+     * @example
+     * var res = source.share();
+     * 
+     * @returns {Observable} An observable sequence that contains the elements of a sequence produced by multicasting the source sequence.
+     */
+    observableProto.share = function () {
+        return this.publish(null).refCount();
     };
 
     /**
@@ -114,7 +139,7 @@
      * 
      * @example
      * var res = source.publishValue(42);
-     * var res = source.publishLast(function (x) { return x.select(function (y) { return y * y; }) }, 42);
+     * var res = source.publishValue(function (x) { return x.select(function (y) { return y * y; }) }, 42);
      * 
      * @param {Function} [selector] Optional selector function which can use the multicasted source sequence as many times as needed, without causing multiple subscriptions to the source sequence. Subscribers to the given source will receive immediately receive the initial value, followed by all notifications of the source from the time of the subscription on.
      * @param {Mixed} initialValue Initial value received by observers upon subscription.
@@ -126,6 +151,21 @@
                 return new BehaviorSubject(initialValue);
             }, initialValueOrSelector) :
             this.multicast(new BehaviorSubject(initialValueOrSelector));
+    };
+
+    /**
+     * Returns an observable sequence that shares a single subscription to the underlying sequence and starts with an initialValue.
+     * This operator is a specialization of publishValue which creates a subscription when the number of observers goes from zero to one, then shares that subscription with all subsequent observers until the number of observers returns to zero, at which point the subscription is disposed.
+     * 
+     * @example
+     * var res = source.shareValue(42);
+     * 
+     * @param {Mixed} initialValue Initial value received by observers upon subscription.
+     * @returns {Observable} An observable sequence that contains the elements of a sequence produced by multicasting the source sequence.
+     */
+    observableProto.shareValue = function (initialValue) {
+        return this.publishValue(initialValue).
+            refCount();
     };
 
     /**
@@ -150,6 +190,25 @@
             this.multicast(function () {
                 return new ReplaySubject(bufferSize, window, scheduler);
             }, selector);
+    };
+
+    /**
+     * Returns an observable sequence that shares a single subscription to the underlying sequence replaying notifications subject to a maximum time length for the replay buffer.
+     * This operator is a specialization of replay which creates a subscription when the number of observers goes from zero to one, then shares that subscription with all subsequent observers until the number of observers returns to zero, at which point the subscription is disposed.
+     * 
+     * @example
+     * var res = source.replayWhileObserved(3);
+     * var res = source.replayWhileObserved(3, 500);
+     * var res = source.replayWhileObserved(3, 500, scheduler);
+     * 
+
+     * @param bufferSize [Optional] Maximum element count of the replay buffer.
+     * @param window [Optional] Maximum time length of the replay buffer.
+     * @param scheduler [Optional] Scheduler where connected observers within the selector function will be invoked on.
+     * @returns {Observable} An observable sequence that contains the elements of a sequence produced by multicasting the source sequence.
+     */
+    observableProto.replayWhileObserved = function (bufferSize, window, scheduler) {
+        return this.replay(null, bufferSize, window, scheduler).refCount();
     };
 
     /** @private */
@@ -433,7 +492,7 @@
     }(Observable));
 
     /** @private */
-    var ConnectableObservable = (function (_super) {
+    var ConnectableObservable = Rx.ConnectableObservable = (function (_super) {
         inherits(ConnectableObservable, _super);
 
         /**

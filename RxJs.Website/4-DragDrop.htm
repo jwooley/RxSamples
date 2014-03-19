@@ -2,38 +2,34 @@
 <html xmlns="http://www.w3.org/1999/xhtml">
 <head>
     <title></title>
-    <script src="Scripts/jquery-2.0.3.min.js"></script>
-    <script type="text/javascript" src="Scripts/rx.js"></script>
-    <script type="text/javascript" src="Scripts/rx.jQuery.js"></script>
+    <script type="text/javascript" src="Scripts/jquery-2.1.0.js"></script>
+    <script type="text/javascript" src="Scripts/rx.lite.js"></script>
 
     <script type="text/javascript">
         $(document).ready(function () {
             var dragTarget = $("img");
-            var mouseUp = dragTarget.toObservable("mouseup");
-            var mouseMove = dragTarget.toObservable("mousemove");
-            var mouseDown = dragTarget.toObservable("mousedown")
-                .Select(function (event) {
-                    return {
-                        left: event.clientX - dragTarget.offset().left,
-                        top: event.clientY - dragTarget.offset().top
-                    };
-                });
+            var mouseUp = Rx.Observable.fromEvent(dragTarget, "mouseup");
+            var mouseMove = Rx.Observable.fromEvent(dragTarget, "mousemove");
+            var mouseDown = Rx.Observable.fromEvent(dragTarget, "mousedown");
 
-            var moves = mouseDown.SelectMany(function (imageOffset) {
-                return mouseMove
-                        .Do(function (event) { event.preventDefault(); })
-                        .Select(function (pos) {
-                            return {
-                                target: dragTarget,
-                                left: pos.clientX - imageOffset.left,
-                                top: pos.clientY - imageOffset.top
-                            };
-                        })
-                        .TakeUntil(mouseUp);
+            var moves = mouseDown.selectMany(function (imageOffset) {
+                var startX = imageOffset.offsetX,
+                    startY = imageOffset.offsetY;
+
+                return mouseMove.map(function (mm) {
+                    mm.preventDefault ? mm.preventDefault() : event.returnValue = false;
+
+                    return {
+                        left: mm.clientX - startX,
+                        top: mm.clientY - startY
+                    };
+                })
+                .takeUntil(mouseUp);
+
             });
-            moves.Subscribe(function (pos) {
-                pos.target.css("left", pos.left);
-                pos.target.css("top", pos.top);
+
+            subscription = moves.subscribe(function (pos) {
+                dragTarget.css({top: pos.top, left: pos.left});
             });
         });
     </script>

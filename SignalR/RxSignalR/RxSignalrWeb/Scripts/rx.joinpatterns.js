@@ -1,11 +1,23 @@
 // Copyright (c) Microsoft Open Technologies, Inc. All rights reserved. See License.txt in the project root for license information.
 
-(function (root, factory) {
-    var freeExports = typeof exports == 'object' && exports,
-        freeModule = typeof module == 'object' && module && module.exports == freeExports && module,
-        freeGlobal = typeof global == 'object' && global;
-    if (freeGlobal.global === freeGlobal) {
-        window = freeGlobal;
+;(function (factory) {
+    var objectTypes = {
+        'boolean': false,
+        'function': true,
+        'object': true,
+        'number': false,
+        'string': false,
+        'undefined': false
+    };
+
+    var root = (objectTypes[typeof window] && window) || this,
+        freeExports = objectTypes[typeof exports] && exports && !exports.nodeType && exports,
+        freeModule = objectTypes[typeof module] && module && !module.nodeType && module,
+        moduleExports = freeModule && freeModule.exports === freeExports && freeExports,
+        freeGlobal = objectTypes[typeof global] && global;
+    
+    if (freeGlobal && (freeGlobal.global === freeGlobal || freeGlobal.window === freeGlobal)) {
+        root = freeGlobal;
     }
 
     // Because of build optimizers
@@ -19,25 +31,25 @@
     } else {
         root.Rx = factory(root, {}, root.Rx);
     }
-}(this, function (global, exp, Rx, undefined) {
+}.call(this, function (root, exp, Rx, undefined) {
     
     // Aliases
     var Observable = Rx.Observable,
         observableProto = Observable.prototype,
-        AnonymousObservable = Rx.Internals.AnonymousObservable,
+        AnonymousObservable = Rx.AnonymousObservable,
         observableThrow = Observable.throwException,
         observerCreate = Rx.Observer.create,
         SingleAssignmentDisposable = Rx.SingleAssignmentDisposable,
         CompositeDisposable = Rx.CompositeDisposable,
-        AbstractObserver = Rx.Internals.AbstractObserver,
-        isEqual = Rx.Internals.isEqual;
+        AbstractObserver = Rx.internals.AbstractObserver,
+        isEqual = Rx.internals.isEqual;
 
     // Defaults
     function defaultComparer(x, y) { return isEqual(x, y); }
     function noop() { }
 
     // Utilities
-    var inherits = Rx.Internals.inherits;
+    var inherits = Rx.internals.inherits;
     var slice = Array.prototype.slice;
     function argsOrArray(args, idx) {
         return args.length === 1 && Array.isArray(args[idx]) ?
@@ -335,8 +347,6 @@
         return JoinObserver;
     } (AbstractObserver));
 
-    // Observable extensions
-    
     /**
      *  Creates a pattern that matches when both observable sequences have an available value.
      *  

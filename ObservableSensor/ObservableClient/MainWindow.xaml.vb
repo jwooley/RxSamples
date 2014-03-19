@@ -66,17 +66,6 @@ Class MainWindow
 
         heartbeatAggregate.ObserveOnDispatcher.Subscribe(Sub(group) Heartbeat.Content = group.Count)
 
-        'heartbeatAggregate.ObserveOnDispatcher.Subscribe(Sub(group)
-        '                                                     Dim thisCount As Integer
-        '                                                     group.Subscribe(Sub(item)
-        '                                                                         thisCount += 1
-        '                                                                     End Sub,
-        '                                                                                         Sub()
-        '                                                                         Heartbeat.Content = thisCount
-        '                                                                     End Sub)
-        '                                                 End Sub)
-
-
     End Sub
 
     Private Sub MouseMoveSamples_Click(ByVal sender As System.Object, ByVal e As System.Windows.RoutedEventArgs) Handles MouseMoveSamples.Click

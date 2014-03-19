@@ -13,6 +13,7 @@ using System.Windows.Navigation;
 using SilverlightApplication1.Observables;
 using System.Collections.ObjectModel;
 using SilverlightApplication1.BingTranslatorService;
+using System.Reactive.Linq;
 
 namespace SilverlightApplication1.Views
 {
@@ -49,7 +50,7 @@ namespace SilverlightApplication1.Views
                 Translations.ItemsSource = results;
 
                 IObservable<string> translationTexts =
-                    (from keyup in Observable.FromEvent<KeyEventArgs>(txtTranslation, "KeyUp")
+                    (from keyup in Observable.FromEventPattern<KeyEventArgs>(txtTranslation, "KeyUp")
                      where !String.IsNullOrEmpty(txtTranslation.Text)
                      select txtTranslation.Text)
                     .Throttle(TimeSpan.FromSeconds(PressDelay))
@@ -85,7 +86,7 @@ namespace SilverlightApplication1.Views
 
         private void SetupCombo()
         {
-            var comboChanged = Observable.FromEvent<SelectionChangedEventArgs>(cbLanguage, "SelectionChanged");
+            var comboChanged = Observable.FromEventPattern<SelectionChangedEventArgs>(cbLanguage, "SelectionChanged");
             comboChanged.Subscribe(_ => _sourceLanguage = _destLanguages[cbLanguage.SelectedIndex]);
         }
     }

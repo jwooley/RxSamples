@@ -1,11 +1,23 @@
 // Copyright (c) Microsoft Open Technologies, Inc. All rights reserved. See License.txt in the project root for license information.
 
-(function (root, factory) {
-    var freeExports = typeof exports == 'object' && exports,
-        freeModule = typeof module == 'object' && module && module.exports == freeExports && module,
-        freeGlobal = typeof global == 'object' && global;
-    if (freeGlobal.global === freeGlobal) {
-        window = freeGlobal;
+;(function (factory) {
+    var objectTypes = {
+        'boolean': false,
+        'function': true,
+        'object': true,
+        'number': false,
+        'string': false,
+        'undefined': false
+    };
+
+    var root = (objectTypes[typeof window] && window) || this,
+        freeExports = objectTypes[typeof exports] && exports && !exports.nodeType && exports,
+        freeModule = objectTypes[typeof module] && module && !module.nodeType && module,
+        moduleExports = freeModule && freeModule.exports === freeExports && freeExports,
+        freeGlobal = objectTypes[typeof global] && global;
+    
+    if (freeGlobal && (freeGlobal.global === freeGlobal || freeGlobal.window === freeGlobal)) {
+        root = freeGlobal;
     }
 
     // Because of build optimizers
@@ -19,17 +31,17 @@
     } else {
         root.Rx = factory(root, {}, root.Rx);
     }
-}(this, function (global, exp, Rx, undefined) {
+}.call(this, function (root, exp, Rx, undefined) {
     
 	// Aliases
 	var Scheduler = Rx.Scheduler,
-		PriorityQueue = Rx.Internals.PriorityQueue,
-		ScheduledItem = Rx.Internals.ScheduledItem,
-		SchedulePeriodicRecursive  = Rx.Internals.SchedulePeriodicRecursive,
+		PriorityQueue = Rx.internals.PriorityQueue,
+		ScheduledItem = Rx.internals.ScheduledItem,
+		SchedulePeriodicRecursive  = Rx.internals.SchedulePeriodicRecursive,
 		disposableEmpty = Rx.Disposable.empty,
-		inherits = Rx.Internals.inherits;
+		inherits = Rx.internals.inherits;
 
-	function defaultSubComparer(x, y) { return x - y; }
+	function defaultSubComparer(x, y) { return x > y ? 1 : (x < y ? -1 : 0); }
 
     /** Provides a set of extension methods for virtual time scheduling. */
     Rx.VirtualTimeScheduler = (function (_super) {

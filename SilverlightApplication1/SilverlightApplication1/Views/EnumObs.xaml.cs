@@ -1,7 +1,8 @@
 ﻿using System;
 using System.Collections.ObjectModel;
-using System.Concurrency;
 using System.Linq;
+using System.Reactive.Concurrency;
+using System.Reactive.Linq;
 using System.Threading;
 using System.Windows;
 using System.Windows.Controls;
@@ -9,7 +10,7 @@ using System.Windows.Navigation;
 
 namespace SilverlightApplication1.Views
 {
-  
+
     public partial class EnumObs : Page
     {
         public EnumObs()
@@ -46,7 +47,7 @@ namespace SilverlightApplication1.Views
             Results.ItemsSource = vals;
             
             sw.Start();
-            var query = Observable.Range(1, 10).ObserveOn(Scheduler.NewThread)
+            var query = Observable.Range(1, 10).ObserveOn(NewThreadScheduler.Default)
                 .Where(num => num % 2 == 0)
                 .Do(num => Thread.SpinWait((10 - num) * 10000000))
                 ;

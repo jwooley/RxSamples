@@ -1,11 +1,23 @@
 // Copyright (c) Microsoft Open Technologies, Inc. All rights reserved. See License.txt in the project root for license information.
 
-(function (root, factory) {
-    var freeExports = typeof exports == 'object' && exports,
-        freeModule = typeof module == 'object' && module && module.exports == freeExports && module,
-        freeGlobal = typeof global == 'object' && global;
-    if (freeGlobal.global === freeGlobal) {
-        window = freeGlobal;
+;(function (factory) {
+    var objectTypes = {
+        'boolean': false,
+        'function': true,
+        'object': true,
+        'number': false,
+        'string': false,
+        'undefined': false
+    };
+
+    var root = (objectTypes[typeof window] && window) || this,
+        freeExports = objectTypes[typeof exports] && exports && !exports.nodeType && exports,
+        freeModule = objectTypes[typeof module] && module && !module.nodeType && module,
+        moduleExports = freeModule && freeModule.exports === freeExports && freeExports,
+        freeGlobal = objectTypes[typeof global] && global;
+    
+    if (freeGlobal && (freeGlobal.global === freeGlobal || freeGlobal.window === freeGlobal)) {
+        root = freeGlobal;
     }
 
     // Because of build optimizers
@@ -19,14 +31,14 @@
     } else {
         root.Rx = factory(root, {}, root.Rx);
     }
-}(this, function (global, exp, Rx, undefined) {
+}.call(this, function (root, exp, Rx, undefined) {
     
     // References
     var Observable = Rx.Observable,
         observableProto = Observable.prototype,
         CompositeDisposable = Rx.CompositeDisposable,
-        AnonymousObservable = Rx.Internals.AnonymousObservable,
-        isEqual = Rx.Internals.isEqual;
+        AnonymousObservable = Rx.AnonymousObservable,
+        isEqual = Rx.internals.isEqual;
 
     // Defaults
     var argumentOutOfRange = 'Argument out of range';
@@ -307,6 +319,9 @@
                     count: prev.count + 1
                 };
             }).finalValue().select(function (s) {
+                if (s.count === 0) {
+                    throw new Error('The input sequence was empty');
+                }
                 return s.sum / s.count;
             });
     };

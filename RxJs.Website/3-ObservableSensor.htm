@@ -2,8 +2,9 @@
 <html xmlns="http://www.w3.org/1999/xhtml">
 <head>
     <title>RxJs Observable Sensor</title>
-    <script src="Scripts/jquery-2.0.3.min.js"></script>
-    <script type="text/javascript" src="Scripts/rx.js"></script>
+    <script type="text/javascript" src="Scripts/jquery-2.1.0.js"></script>
+    <script type="text/javascript" src="Scripts/rx.lite.js"></script>
+    <script type="text/javascript" src="Scripts/rx.time.js"></script>
 </head>
 <body>
     <p>
@@ -27,11 +28,11 @@
         var lowValueSubsription;
 
         $(function () {
-            sensor = Rx.Observable.generate(0,
+            sensor = Rx.Observable.generateWithRelativeTime(0,
                 function (i) { return true; },
-                function (i) { return i; },
-                function (i) { return { type: Math.floor(Math.random() * 4), value: Math.random() * 20, timeStamp: new Date() }; },
-                function (i) { return Math.random() * 200; }
+                function (i) { return Math.random(); },
+                function (i) { return { type: Math.floor(i * 4), value: i * 20, timeStamp: new Date() }; },
+                function (i) { return i * 200; }
             );
 
             $("#btnLowValueSensors").click(function (e) {
@@ -50,27 +51,27 @@
             });
 
             $("#btnSelectedTypeSensors").click(function (e) {
-                var query = sensor.Where(function (next) { return (next.type == "2"); });
-                query.Subscribe(function (next) {
+                var query = sensor.where(function (next) { return (next.type == "2"); });
+                query.subscribe(function (next) {
                     $("<li/>").html(next.timeStamp + " - " + next.type + ": " + next.value).appendTo("#SelectedTypeSensors");
                 });
             });
 
             $("#btnWarnOutliers").click(function (e) {
                 sensor
-                    .Where(function (next) { return next.value > 19; })
-                    .Take(1)
-                    .Subscribe(function (next) {
+                    .where(function (next) { return next.value > 19; })
+                    .take(1)
+                    .subscribe(function (next) {
                         $("blink").text(next.value + " Happened");
                     });
             });
 
             $("#btnHeartbeat").click(function (e) {
                 var heartbeat = sensor
-                    .Where(function (next) { return next.type = "2"; })
-                    .BufferWithTime(3000);
+                    .where(function (next) { return next.type = "2"; })
+                    .bufferWithTime(3000);
 
-                heartbeat.Subscribe(function (next) {
+                heartbeat.subscribe(function (next) {
                     var typesPerSecond = next.length;
                     $("#btnHeartbeat").html(typesPerSecond);
                 });

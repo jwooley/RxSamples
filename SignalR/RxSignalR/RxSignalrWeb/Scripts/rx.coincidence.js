@@ -1,11 +1,23 @@
 // Copyright (c) Microsoft Open Technologies, Inc. All rights reserved. See License.txt in the project root for license information.
 
-(function (root, factory) {
-    var freeExports = typeof exports == 'object' && exports,
-        freeModule = typeof module == 'object' && module && module.exports == freeExports && module,
-        freeGlobal = typeof global == 'object' && global;
-    if (freeGlobal.global === freeGlobal) {
-        window = freeGlobal;
+;(function (factory) {
+    var objectTypes = {
+        'boolean': false,
+        'function': true,
+        'object': true,
+        'number': false,
+        'string': false,
+        'undefined': false
+    };
+
+    var root = (objectTypes[typeof window] && window) || this,
+        freeExports = objectTypes[typeof exports] && exports && !exports.nodeType && exports,
+        freeModule = objectTypes[typeof module] && module && !module.nodeType && module,
+        moduleExports = freeModule && freeModule.exports === freeExports && freeExports,
+        freeGlobal = objectTypes[typeof global] && global;
+    
+    if (freeGlobal && (freeGlobal.global === freeGlobal || freeGlobal.window === freeGlobal)) {
+        root = freeGlobal;
     }
 
     // Because of build optimizers
@@ -19,7 +31,7 @@
     } else {
         root.Rx = factory(root, {}, root.Rx);
     }
-}(this, function (global, exp, Rx, undefined) {
+}.call(this, function (root, exp, Rx, undefined) {
     
     var Observable = Rx.Observable,
         CompositeDisposable = Rx.CompositeDisposable,
@@ -29,13 +41,13 @@
         Subject = Rx.Subject,
         observableProto = Observable.prototype,
         observableEmpty = Observable.empty,
-        AnonymousObservable = Rx.Internals.AnonymousObservable,
+        AnonymousObservable = Rx.AnonymousObservable,
         observerCreate = Rx.Observer.create,
-        addRef = Rx.Internals.addRef;
+        addRef = Rx.internals.addRef,
+        defaultComparer = Rx.internals.isEqual;
 
     // defaults
     function noop() { }
-    function defaultComparer(x, y) { return x === y; }
     
     // Real Dictionary
     var primes = [1, 3, 7, 13, 31, 61, 127, 251, 509, 1021, 2039, 4093, 8191, 16381, 32749, 65521, 131071, 262139, 524287, 1048573, 2097143, 4194301, 8388593, 16777213, 33554393, 67108859, 134217689, 268435399, 536870909, 1073741789, 2147483647];
@@ -561,7 +573,7 @@
             return r;
         });
     };
-    
+
     /**
      *  Projects each element of an observable sequence into zero or more buffers.
      *  
@@ -572,7 +584,7 @@
     observableProto.buffer = function (bufferOpeningsOrClosingSelector, bufferClosingSelector) {
         return this.window.apply(this, arguments).selectMany(function (x) { return x.toArray(); });
     };
-    
+
     /**
      *  Projects each element of an observable sequence into zero or more windows.
      *  

@@ -2,8 +2,9 @@
 <html>
 <head>
     <title>Observable Bing Translator</title>
-    <script src="Scripts/jquery-2.0.3.min.js"></script>
+    <script type="text/javascript" src="Scripts/jquery-2.1.0.js"></script>
     <script type="text/javascript" src="Scripts/rx.js"></script>
+    <script type="text/javascript" src="Scripts/rx.lite.compat.js"></script>
     <script type="text/javascript" src="Scripts/rx.jquery.js"></script>
     <script type="text/javascript" src="Scripts/rx.microsoft.translator.js"></script>
 </head>
@@ -14,41 +15,46 @@
     <div id="keypresses">
     </div>
     <script type="text/javascript">
-        var destLanguages = [ "de", "es", "zh-CHT", "fr", "it" , "ar", "ht", "he", "ja", "ko", "no", "ru", "th"];
+        var destLanguages = [ "de", "es", "zh-CHT", "fr", "it" , "ar", "ht", "he", "ja", "ko", "no", "ru", "th", "tlh"];
         var appId = "1848A7A37C632E32B67492E22DA29125992A298C";
 
         (function ($) {
             
-            var languagesObs = Rx.Observable.FromArray(destLanguages);
+            var translate = function (text, lang) {
+                var p = { appId: appId, to: lang, from: 'en-us', text: text };
+                var promise = $.ajax({
+                    url: 'http://api.microsofttranslator.com/V2/Ajax.svc/Translate',
+                    data: p,
+                    dataType: 'jsonp',
+                    jsonp: 'oncomplete',
+                }).promise();
+                return Rx.Observable.fromPromise(promise);
+            };
+
+            var languagesObs = Rx.Observable.fromArray(destLanguages);
             var trans = Microsoft.Translator(appId);
 
-//            var translated = Microsoft.translate("testing", "en-us", "de");
-//            translated.Subscribe(function( value ) {
-//                $("#output").append(value);}
-//            );
-
-            var textInputDetected = $("#TextToTranslate")
-                .toObservable('keyup')
-                .Throttle(500)
-                .Do(function(_) { $("#output").empty(); })
-                .Select(function () {
-                    return $("#TextToTranslate").val(); 
-                 })
-                .DistinctUntilChanged()
-                .SelectMany(function(text) {
-                    return languagesObs.Select(function(t1) {
-                        return {source:text, dest:t1};
+            var textInputDetected = Rx.Observable.fromEvent($("#TextToTranslate"), 'keyup')
+                .throttle(500)
+                .do(function (_) { $("#output").empty(); })
+                .select(function () {
+                    return $("#TextToTranslate").val();
+                })
+                .distinctUntilChanged()
+                .selectMany(function (text) {
+                    return languagesObs.select(function (t1) {
+                        return { source: text, dest: t1 };
                     });
                 })
-                .SelectMany(function (sourceDest) {
-                    return Microsoft.translate(sourceDest.source, 'en-us', sourceDest.dest)
-                        .Select(function(translated) {
-                            return {dest: sourceDest.dest, translation: translated };
+                .selectMany(function (sourceDest) {
+                    return translate(sourceDest.source, sourceDest.dest)
+                        .select( function(result){
+                            return {dest: sourceDest.dest, translation: result};
                         });
                 });
             
-            d = textInputDetected.Subscribe(function (x) {
-                    $("#output").append(x.dest + ' : ' + x.translation + '<br />');
+            d = textInputDetected.subscribe(function (x) {
+                $("#output").append(x.dest + ' : ' + x.translation + '<br />');
                 },
                 function(err) {
                     $("#output").append(err + '<br />')

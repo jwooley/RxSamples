@@ -1,16 +1,28 @@
 // Copyright (c) Microsoft Open Technologies, Inc. All rights reserved. See License.txt in the project root for license information.
 
-(function (root, factory) {
-    var freeExports = typeof exports == 'object' && exports,
-        freeModule = typeof module == 'object' && module && module.exports == freeExports && module,
-        freeGlobal = typeof global == 'object' && global;
-    if (freeGlobal.global === freeGlobal) {
-        window = freeGlobal;
+;(function (factory) {
+    var objectTypes = {
+        'boolean': false,
+        'function': true,
+        'object': true,
+        'number': false,
+        'string': false,
+        'undefined': false
+    };
+
+    var root = (objectTypes[typeof window] && window) || this,
+        freeExports = objectTypes[typeof exports] && exports && !exports.nodeType && exports,
+        freeModule = objectTypes[typeof module] && module && !module.nodeType && module,
+        moduleExports = freeModule && freeModule.exports === freeExports && freeExports,
+        freeGlobal = objectTypes[typeof global] && global;
+    
+    if (freeGlobal && (freeGlobal.global === freeGlobal || freeGlobal.window === freeGlobal)) {
+        root = freeGlobal;
     }
 
     // Because of build optimizers
     if (typeof define === 'function' && define.amd) {
-        define(['rx', 'exports'], function (Rx, exports) {
+        define(['rx.virtualtime', 'exports'], function (Rx, exports) {
             root.Rx = factory(root, exports, Rx);
             return root.Rx;
         });
@@ -19,7 +31,7 @@
     } else {
         root.Rx = factory(root, {}, root.Rx);
     }
-}(this, function (global, exp, Rx, undefined) {
+}.call(this, function (root, exp, Rx, undefined) {
     
     // Defaults
     var Observer = Rx.Observer,
@@ -32,13 +44,8 @@
         CompositeDisposable = Rx.CompositeDisposable,
         SingleAssignmentDisposable = Rx.SingleAssignmentDisposable,
         slice = Array.prototype.slice,
-        inherits = Rx.Internals.inherits,
-        isEqual = Rx.Internals.isEqual;
-
-    // Utilities
-    function defaultComparer(x, y) {
-        return isEqual(x, y);
-    }
+        inherits = Rx.internals.inherits,
+        defaultComparer = Rx.internals.isEqual;
 
     function argsOrArray(args, idx) {
         return args.length === 1 && Array.isArray(args[idx]) ?
@@ -302,8 +309,10 @@
                 notification = message.value;
                 (function (innerNotification) {
                     scheduler.scheduleAbsoluteWithState(null, message.time, function () {
-                        for (var j = 0; j < observable.observers.length; j++) {
-                            innerNotification.accept(observable.observers[j]);
+                        var obs = observable.observers.slice(0);
+
+                        for (var j = 0, jLen = obs.length; j < jLen; j++) {
+                            innerNotification.accept(obs[j]);
                         }
                         return disposableEmpty;
                     });

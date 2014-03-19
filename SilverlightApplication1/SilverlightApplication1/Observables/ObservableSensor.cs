@@ -10,67 +10,43 @@ using System.Windows.Media.Animation;
 using System.Windows.Shapes;
 using System.Collections.Generic;
 using System.Linq;
+using System.Reactive.Linq;
 
 namespace SilverlightApplication1
 {
 
-    public class ObservableSensor: IObservable<SensorInfo>, IDisposable
+    public class ObservableSensor: IObservable<SensorInfo>
     {
-        List<IObserver<SensorInfo>> _observers = new List<IObserver<SensorInfo>>();
-        bool _running;
+        private IObservable<SensorInfo> source;
+        private bool _running;
+
+        public IDisposable Subscribe(IObserver<SensorInfo> observer)
+        {
+            _running = true;
+            var handle = source.Subscribe(observer);
+            return handle;
+        }
 
         public void StartSensor()
         {
-            if (!_running)
-            {
-                _running = true;
-                Random randomizer = new Random(DateTime.Now.Millisecond);
-                while (_running)
-                {
-                    double randVal = randomizer.NextDouble();
-                    if (_observers.Any())
+            var randomizer = new Random(DateTime.Now.Millisecond);
+            source = Observable.Generate(
+                initialState: 0.0,
+                condition: _ => _running,
+                iterate: _ => randomizer.NextDouble(),
+                resultSelector: x => new SensorInfo
                     {
-                        SensorInfo info = new SensorInfo
-                        {
-                            SensorType = ((int)(randVal * 4)).ToString(),
-                            SensorValue = randVal * 20,
-                            TimeStamp = DateTime.Now
-                        };
-                        _observers.ForEach(o =>  o.OnNext(info));
-                    }
-                    System.Threading.Thread.Sleep((int)randomizer.NextDouble() * 1000);
-                }
-            }
+                        SensorType = ((int)(x * 4)).ToString(),
+                        SensorValue = x * 20,
+                        TimeStamp = DateTime.Now
+                    },
+                timeSelector: x => TimeSpan.FromMilliseconds(x * 100)
+            );
         }
 
         public void StopSensor()
         {
             _running = false;
         }
-
-        #region IDisposable Members
-
-        public void Dispose()
-        {
-            if (_observers != null)
-            {
-                _observers.ForEach(o => o.OnCompleted());
-                _observers.Clear();
-            }
-        }
-
-        #endregion
-
-        #region IObservable<SensorInfo> Members
-
-        public IDisposable Subscribe(IObserver<SensorInfo> observer)
-        {
-            _observers.Add(observer);
-            if (!_running)
-                _running = true;
-            return this;
-        }
-
-        #endregion
     }
 }

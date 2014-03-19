@@ -12,6 +12,7 @@ using System.Windows.Shapes;
 using System.Windows.Navigation;
 using SilverlightApplication1.ReactiveService;
 using System.Collections.ObjectModel;
+using System.Reactive.Linq;
 
 namespace SilverlightApplication1.Views
 {
@@ -28,14 +29,14 @@ namespace SilverlightApplication1.Views
             var svc = new ReactiveService.LongRunningServiceClient();
 
             IObservable<string> inputChanges =
-               (from keyup in Observable.FromEvent<KeyEventArgs>(this.Input, "KeyUp")
+               (from keyup in Observable.FromEventPattern<KeyEventArgs>(this.Input, "KeyUp")
                 select Input.Text)
                .Throttle(TimeSpan.FromSeconds(1))
                .ObserveOnDispatcher()
                .Do(val => svc.SortItAsync(val))
                ;
 
-            var svcCompleted = Observable.FromEvent<SortItCompletedEventArgs>(svc, "SortItCompleted");
+            var svcCompleted = Observable.FromEventPattern<SortItCompletedEventArgs>(svc, "SortItCompleted");
 
             var results = from change in inputChanges
                           from res in svcCompleted

@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Reactive.Linq;
 using System.Net;
 using System.Windows;
 using System.Windows.Controls;
@@ -75,7 +76,7 @@ namespace SilverlightApplication1
 
         private void Heartbeat_Click(object sender, RoutedEventArgs e)
         {
-            var heartbeat = sensor.BufferWithTime(TimeSpan.FromSeconds(3));
+            var heartbeat = sensor.Buffer(TimeSpan.FromSeconds(3));
 
             heartbeat.ObserveOnDispatcher().Subscribe(v => Heartbeat.Content = v.
                 Where(val => val.SensorType == "2").Count());
