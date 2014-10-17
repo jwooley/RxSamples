@@ -42,27 +42,21 @@ namespace SilverlightApplication1.Views
         private void Observable_Click(object sender, RoutedEventArgs e)
         {
             Stopwatch sw = new Stopwatch();
+            ObservableCollection<int> nums = new ObservableCollection<int>();
+            Results.ItemsSource = nums;
 
-            ObservableCollection<int> vals = new ObservableCollection<int>();
-            Results.ItemsSource = vals;
-            
             sw.Start();
-            var query = Observable.Range(1, 10).ObserveOn(NewThreadScheduler.Default)
+            var query = Observable.Range(1, 10).SubscribeOn(NewThreadScheduler.Default)
                 .Where(num => num % 2 == 0)
                 .Do(num => Thread.SpinWait((10 - num) * 10000000))
-                ;
-
-            query.ObserveOnDispatcher().Subscribe(val =>
-            {
-                vals.Add(val);
-            },
-            () =>
+                .ObserveOnDispatcher()
+                .Subscribe(num => nums.Add(num),
+                    () =>
             {
                 sw.Stop();
 
                 TotalTime.Text = "Total Time: " + sw.ElapsedTicks.ToString("n");
-
-            });
+            }) ;
 
         }
 
@@ -73,7 +67,7 @@ namespace SilverlightApplication1.Views
         //    Results.ItemsSource = items;
 
         //    sw.Start();
-        //    var query = Enumerable.Range(1, 10).ToObservable().SubscribeOn(Scheduler.NewThread)
+        //    var query = Enumerable.Range(1, 10).ToObservable().SubscribeOn(NewThreadScheduler.Default)
         //        .Where(num => num % 2 == 0)
         //        .Do(num => Thread.SpinWait((10 - num) * 10000000))
         //        .ObserveOnDispatcher()

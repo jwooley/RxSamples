@@ -10,7 +10,7 @@
     <Canvas x:Name="RootCanvas">
         <TextBox x:Name="InputText" Canvas.Top="100" Canvas.Left="50" Width="400" Height="43" />
         <MediaElement x:Name="TickSound" AutoPlay="False" Source="Assets/Metronome-tick.wav" />
-        <ListView x:Name="Translations"  Canvas.Top="200" Canvas.Left="50" Width="800" Height="500" >
+        <ListView x:Name="Translations"  Canvas.Top="200" Canvas.Left="50" Width="800" Height="500" FontSize="16" >
            
         </ListView>
         <TextBlock x:Name="Error" Width="600" />

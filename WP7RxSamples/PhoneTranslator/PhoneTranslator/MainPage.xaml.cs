@@ -25,7 +25,7 @@ namespace PhoneTranslator
             InitializeComponent();
         }
         const string AppID = "1848A7A37C632E32B67492E22DA29125992A298C";
-        string _sourceLanguage = "en";
+        //string _sourceLanguage = "en";
         string[] _destLanguages = { "en", "de", "es", "fr", "it" };
         const string TranslatingText = "Translating...";
         const double PressDelay = 1.0;

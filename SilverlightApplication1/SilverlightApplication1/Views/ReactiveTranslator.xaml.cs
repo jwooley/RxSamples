@@ -32,7 +32,7 @@ namespace SilverlightApplication1.Views
         string _sourceLanguage = "en";
         string[] _destLanguages = { "en", "de", "es", "fr", "it" };
         const string TranslatingText = "Translating...";
-        const double PressDelay = .25;
+        const double PressDelay = .5;
 
         // Executes when the user navigates to this page.
         protected override void OnNavigatedTo(NavigationEventArgs e)
@@ -61,7 +61,7 @@ namespace SilverlightApplication1.Views
                 //LanguageService svc = new LanguageServiceClient();
                 //var translatorSvc = Observable.FromAsyncPattern<TranslateRequest,TranslateResponse>(svc.BeginTranslate, svc.EndTranslate);
 
-                var destLanguages = new string[] { "de", "es", "zh-CHT", "fr", "it" , "ar", "ht", "he", "ja", "ko", "no", "ru", "th"};
+                var destLanguages = new string[] { "de", "es", "zh-CHT", "fr", "it" , "ar", "ht", "he", "ja", "ko", "no", "ru", "th", "tlh"};
 
                 var query =
                     from lang in destLanguages.ToObservable()
