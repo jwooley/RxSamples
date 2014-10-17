@@ -6,6 +6,9 @@
     xmlns:shell="clr-namespace:Microsoft.Phone.Shell;assembly=Microsoft.Phone"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+    xmlns:tkp="clr-namespace:Microsoft.Phone.Controls.Primitives;assembly=Microsoft.Phone.Controls.Toolkit"
+    xmlns:toolkit="clr-namespace:Microsoft.Phone.Controls;assembly=Microsoft.Phone.Controls.Toolkit"
+    
     mc:Ignorable="d" d:DesignWidth="480" d:DesignHeight="768" 
     d:DataContext="{d:DesignData SampleData/MainViewModelSampleData.xaml}"
     FontFamily="{StaticResource PhoneFontFamilyNormal}"
@@ -32,23 +35,29 @@
             <Button x:Name="RollButton" Content="Roll"></Button>
             <StackPanel Orientation="Horizontal">
                 <TextBlock VerticalAlignment="Center" Text="Side Count: "></TextBlock>
-                <TextBox x:Name="txtSideCount" Text="{Binding SideCount, Mode=TwoWay}"></TextBox>
+                <tkp:LoopingSelector Height="200" Width="75" ItemSize="75,75" FontSize="36" DataSource="{Binding SideCountDataSource}" ItemMargin="6" />
                 <TextBlock VerticalAlignment="Center" Text="Dice Count: "></TextBlock>
-                <TextBox Text="{Binding DiceCount, Mode=TwoWay}"></TextBox>
+                <tkp:LoopingSelector Height="200" Width="75" ItemSize="75,75" FontSize="36" DataSource="{Binding DiceCountDataSource}" ItemMargin="6" />
             </StackPanel>
-            <ListBox x:Name="MainListBox" Margin="0,0,-12,0" ItemsSource="{Binding Items}" >
+            <TextBlock Name="ErrorBlock" Width="400" TextWrapping="Wrap"></TextBlock>
+            <ListBox x:Name="MainListBox"  Margin="0,0,-12,0" ItemsSource="{Binding Items}" >
+                <ListBox.ItemsPanel>
+                    <ItemsPanelTemplate >
+                        <toolkit:WrapPanel ItemHeight="100" ItemWidth="155" Orientation="Horizontal"></toolkit:WrapPanel>
+                    </ItemsPanelTemplate>
+                </ListBox.ItemsPanel>
                 <ListBox.ItemTemplate>
                     <DataTemplate>
-                        <StackPanel Margin="0,0,0,17" Orientation="Horizontal">
+                        <StackPanel Orientation="Horizontal">
                             <CheckBox IsChecked="{Binding Frozen, Mode=TwoWay}"></CheckBox>
-                            <Border Margin="0,0,0,0" BorderThickness="3" BorderBrush="#FFBCB1A1" Background="AntiqueWhite" CornerRadius="10">
-
-                                <TextBlock Height="50" Width="50" Text="{Binding DotCount}" VerticalAlignment="Center" Foreground="DarkSlateGray" FontSize="40" TextAlignment="Center"></TextBlock>
+                            <Border Margin="0,0,0,0" BorderThickness="3" BorderBrush="#FFBCB1A1" Background="DarkSlateGray" CornerRadius="10">
+                                <TextBlock Text="{Binding DotCount}" VerticalAlignment="Center" Height="50" Width="50" Foreground="Cyan" FontSize="40" FontWeight="ExtraBold" TextAlignment="Center" ></TextBlock>
                             </Border>
                         </StackPanel>
                     </DataTemplate>
                 </ListBox.ItemTemplate>
             </ListBox>
+            <ListBox x:Name="DebugItems" />
         </StackPanel>
     </Grid>
  

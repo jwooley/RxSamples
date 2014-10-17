@@ -9,7 +9,7 @@
             </basicHttpBinding>
         </bindings>
         <client>
-            <endpoint address="http://localhost:14995/Service/Randomizer.svc"
+            <endpoint address="http://192.168.1.22:49152/Randomizer.svc"
                 binding="basicHttpBinding" bindingConfiguration="BasicHttpBinding_IRandomizer"
                 contract="RandomizerService.IRandomizer" name="BasicHttpBinding_IRandomizer" />
         </client>

@@ -1,45 +1,45 @@
 ﻿using System;
-using System.Net;
-using System.Windows;
-using System.Windows.Controls;
-using System.Windows.Documents;
-using System.Windows.Ink;
-using System.Windows.Input;
-using System.Windows.Media;
-using System.Windows.Media.Animation;
-using System.Windows.Shapes;
 
-using Microsoft.Phone.Reactive;
+using System.Threading;
+using System.Threading.Tasks;
 
 namespace Dice
 {
     public static class Randomizer
     {
-        public static void RollDice(Die instance, int sideCount)
+        private static Lazy<Random> rand = new Lazy<Random>(() => new Random(DateTime.Now.Millisecond));
+
+        public static int Roll(int sideCount)
         {
-            var rand = new Random();
-            instance.DotCount = (int)(rand.NextDouble() * sideCount) + 1;
+
+            int newValue = (int)(rand.Value.NextDouble() * sideCount) + 1;
+
+            System.Threading.Thread.Sleep(newValue * 200);
+            return newValue;
         }
+        public static async Task<int> RollAsync(int sideCount)
+        {
+            int newVal = (int)(rand.Value.NextDouble() * sideCount) + 1;
+            // Simulate a long running operation
+            await Task.Delay(newVal * 200);
+            return newVal;
+        }
+
     }
 
-
-}
-
-namespace Dice.RandomizerService
-{
-    public partial class RandomizerClient
+    public class AsyncSimulator
     {
-        public Func<int, int, IObservable<object[]>> RandomizeDiceObservable()
-        {
-            var obs = Observable.FromAsyncPattern<int, int, object[]>(this.OnBeginRandomDiceResult, this.OnEndRandomDiceResult);
-            return obs;
-        }
+        static System.Threading.AutoResetEvent autoEvent = new AutoResetEvent(false);
 
-        private IAsyncResult OnBeginRandomDiceResult(int sideCount, int index, AsyncCallback callback, object asyncState)
+        public static void DoWork()
         {
-            object[] parameters = { sideCount, index };
-            return OnBeginRandomDiceResult(parameters, callback, asyncState);
+            ThreadPool.QueueUserWorkItem(WorkMethod, autoEvent);
+            autoEvent.WaitOne();
         }
-        
+        static void WorkMethod(Object stateInfo)
+        {
+            Thread.Sleep(new Random().Next(100, 2000));
+            ((AutoResetEvent)stateInfo).Set();
+        }
     }
 }

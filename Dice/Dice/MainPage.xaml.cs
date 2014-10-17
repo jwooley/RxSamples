@@ -3,134 +3,127 @@ using System.Linq;
 using System.Windows;
 using Microsoft.Phone.Controls;
 using Microsoft.Phone.Reactive;
-using Microsoft.Devices.Sensors;
-using Dice.RandomizerService;
+using Microsoft.Devices.Sensors; 
+using Gestures;
 
 namespace Dice
 {
     public partial class MainPage : PhoneApplicationPage
     {
-        private IDisposable _diceObserver;
-
         protected override void OnNavigatedTo(System.Windows.Navigation.NavigationEventArgs e)
         {
-            SetupObservable2();
+            accel = new Accelerometer();
+            accel.Start();
+
+            SetupObservable();
         }
         protected override void OnNavigatingFrom(System.Windows.Navigation.NavigatingCancelEventArgs e)
         {
-            if (_diceObserver != null)
-            {
-                _diceObserver.Dispose();
-                _diceObserver = null;
-            }
-        }
+            _diceObserver.Dispose();
+            _diceObserver = null;
 
-        private void SetupObservable()
-        {
-            var buttonObservable = Observable.FromEvent<RoutedEventArgs>(RollButton, "Click");
-
-            var query = from buttonClick in buttonObservable
-                        from dice in App.ViewModel.Items.ToObservable()
-                        where !dice.Frozen
-                        select dice;
-
-            _diceObserver = query.Subscribe(dice =>
-                Randomizer.RollDice(dice, App.ViewModel.SideCount));
+            accel.Stop();
+            accel.Dispose();
         }
 
         // Constructor
         public MainPage()
         {
-            InitializeComponent();
+            try
+            {
+                InitializeComponent();
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine(ex);
+            }
 
             // Set the data context of the listbox control to the sample data
             DataContext = App.ViewModel;
-            //this.Loaded += new RoutedEventHandler(MainPage_Loaded);
-            //this.RollButton.Click += new RoutedEventHandler(RollButton_ClickObservable);
-            accel = new Accelerometer();
-            accel.Start();
-        }
+            this.Loaded += new RoutedEventHandler(MainPage_Loaded);
 
-        void RollButton_Click(object sender, RoutedEventArgs e)
-        {
-            var unfrozenDice = from dice in App.ViewModel.Items
-                               where !dice.Frozen
-                               select dice;
-
-            foreach (var dice in unfrozenDice)
-            {
-                Randomizer.RollDice(dice, App.ViewModel.SideCount);
-            }
-        }
-
-        void RollButton_ClickObservable(object sender, RoutedEventArgs e)
-        {
-            var unfrozenDice = from dice in App.ViewModel.Items
-                                   .ToObservable()
-                               where !dice.Frozen
-                               select dice;
-
-            unfrozenDice.Subscribe( dice =>
-                Randomizer.RollDice(dice, App.ViewModel.SideCount));
         }
 
         // Load data for the ViewModel Items
         private void MainPage_Loaded(object sender, RoutedEventArgs e)
         {
-
+            if (!App.ViewModel.IsDataLoaded)
+            {
+                App.ViewModel.LoadData();
+            }
+            //this.RollButton.Click += RollClick;
         }
 
         Accelerometer accel = new Accelerometer();
+        private IDisposable _diceObserver;
 
-
-
-        private void SetupObservable2()
+        //private void RollClick(object sender, RoutedEventArgs e)
+        private void SetupObservable()
         {
+            RandomizerService.IRandomizer proxy = new RandomizerService.RandomizerClient();
+            var svcObservable = Observable.FromAsyncPattern<int, int>(proxy.BeginRoll, proxy.EndRoll);
 
-            var buttonObservable = 
-                Observable.FromEvent<RoutedEventArgs>
-                    (RollButton, "Click");
+            var rollDetected = Observable.FromEvent<RoutedEventArgs>(RollButton, "Click").Select(_=> new Unit())
+                .Merge(App.ViewModel.DiceCountDataSource.Select(_ => new Unit()))
+                .Merge(ShakeObserver.GetShakeObserver(accel));
 
-            var rollDetected = 
-                (from buttonClick in buttonObservable
-                 select (EventArgs)buttonClick.EventArgs)
-                .Merge(from shaken in ShakeObserver.GetObserver(accel)
-                 select (EventArgs)shaken.EventArgs);
+            var roll =
+                from detected in rollDetected.Throttle(TimeSpan.FromMilliseconds(400))
+                from die in App.ViewModel.Items.ToObservable()
+                .Where(die => !die.Frozen)
+                .ObserveOnDispatcher()
+                .Do(die => die.DotCount = null)
+                from result in Randomizer.RollAsync(App.ViewModel.SideCount).ToObservable()
+                select new { die, rolledDots = result };
 
-            var query = (from evt in rollDetected
-                         from dice in App.ViewModel.Items.ToObservable()
-                         where !dice.Frozen
-                         select dice)
-                         .ObserveOnDispatcher();
-              
-            _diceObserver = query.Subscribe(dice =>
-                Randomizer.RollDice(dice, App.ViewModel.SideCount));
+            _diceObserver = roll.ObserveOnDispatcher().Subscribe(
+                result => result.die.DotCount = result.rolledDots,
+                err => this.ErrorBlock.Text = err.Message);
+
         }
 
-
-        private void SetupObservableService()
+        #region Demo Code Archives
+        private void RollClickStart(object sender, RoutedEventArgs e)
+        //private void SetupObservable()
         {
-            var buttonObservable = Observable.FromEvent<RoutedEventArgs>(RollButton, "Click");
-            IRandomizer proxy = new RandomizerService.RandomizerClient() as Dice.RandomizerService.IRandomizer;
-            var svcObserver = Observable.FromAsyncPattern<int,int>(proxy.BeginRandomDiceResult, proxy.EndRandomDiceResult);
+            var roll = from die in App.ViewModel.Items
+                       where !die.Frozen
+                       select new { die, rolledDots = Randomizer.Roll(App.ViewModel.SideCount) };
 
-            var rollDetected =
-                (from buttonClick in buttonObservable
-                 select (EventArgs)buttonClick.EventArgs)
-                .Merge(from shaken in ShakeObserver.GetObserver(accel)
-                 select (EventArgs)shaken.EventArgs)
-                .Throttle(TimeSpan.FromMilliseconds(500));
+            foreach (var result in roll)
+            {
+                result.die.DotCount = result.rolledDots;
+            }
+        }
+
+        private void SetupObservableFinished()
+        {
+            RandomizerService.IRandomizer svc = new RandomizerService.RandomizerClient();
+            var svcObserver = Observable.FromAsyncPattern<int, int>(svc.BeginRoll, svc.EndRoll);
+
+            var rollDetected = Observable.FromEvent<RoutedEventArgs>(RollButton, "Click")
+                .Select(_ => new Unit())
+                .Merge(ShakeObserver.GetShakeObserver(accel))
+                .Merge(App.ViewModel.SideCountDataSource.Select(_ => new Unit()))
+                .Throttle(TimeSpan.FromMilliseconds(250))
+                ;
 
             var query =
-                (from evt in rollDetected
-                 from dice in App.ViewModel.Items.ToObservable()
-                 where !dice.Frozen
-                 from result in svcObserver.Invoke(App.ViewModel.SideCount)
-                 .TakeUntil(rollDetected)
-                 select new { dice, svcResult = result })
-                .ObserveOnDispatcher();
+                from roll in rollDetected
+                from die in App.ViewModel.Items.ToObservable()
+                .Where(die => !die.Frozen)
+                .ObserveOnDispatcher()
+                .Do(die => die.DotCount = null)
+                //.ObserveOn(Scheduler.ThreadPool)
+                from result in svcObserver(App.ViewModel.DiceCount)
+                .TakeUntil(rollDetected)
+                select new { die, rolledDots = result };
 
-            _diceObserver = query.Subscribe(val => val.dice.DotCount = val.svcResult);
+            _diceObserver = query.ObserveOnDispatcher()
+                .Subscribe(result => result.die.DotCount = result.rolledDots,
+                    err => ErrorBlock.Text = err.Message);
         }
+        #endregion
+
     }
 }

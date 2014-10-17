@@ -1,0 +1,17 @@
+﻿<configuration>
+    <system.serviceModel>
+        <bindings>
+            <basicHttpBinding>
+                <binding name="BasicHttpBinding_IRandomizer" maxBufferSize="2147483647"
+                    maxReceivedMessageSize="2147483647">
+                    <security mode="None" />
+                </binding>
+            </basicHttpBinding>
+        </bindings>
+        <client>
+            <endpoint address="http://localhost:52130/Service/Randomizer.svc"
+                binding="basicHttpBinding" bindingConfiguration="BasicHttpBinding_IRandomizer"
+                contract="RandomizerService.IRandomizer" name="BasicHttpBinding_IRandomizer" />
+        </client>
+    </system.serviceModel>
+</configuration>

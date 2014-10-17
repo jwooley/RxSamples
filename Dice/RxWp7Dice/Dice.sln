@@ -1,0 +1,97 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio 2012
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Dice", "Dice\Dice.csproj", "{8CD64B05-AE45-49FB-A09B-32EDCD6DAEA2}"
+	ProjectSection(ProjectDependencies) = postProject
+		{182C73D2-F2A2-460C-8FCF-6083D7C4CA65} = {182C73D2-F2A2-460C-8FCF-6083D7C4CA65}
+	EndProjectSection
+EndProject
+Project("{E24C65DC-7377-472B-9ABA-BC803B73C61A}") = "Service", "Service\", "{182C73D2-F2A2-460C-8FCF-6083D7C4CA65}"
+	ProjectSection(WebsiteProperties) = preProject
+		TargetFrameworkMoniker = ".NETFramework,Version%3Dv4.0"
+		Debug.AspNetCompiler.VirtualPath = "/Service"
+		Debug.AspNetCompiler.PhysicalPath = "Service\"
+		Debug.AspNetCompiler.TargetPath = "PrecompiledWeb\Service\"
+		Debug.AspNetCompiler.Updateable = "true"
+		Debug.AspNetCompiler.ForceOverwrite = "true"
+		Debug.AspNetCompiler.FixedNames = "false"
+		Debug.AspNetCompiler.Debug = "True"
+		Release.AspNetCompiler.VirtualPath = "/Service"
+		Release.AspNetCompiler.PhysicalPath = "Service\"
+		Release.AspNetCompiler.TargetPath = "PrecompiledWeb\Service\"
+		Release.AspNetCompiler.Updateable = "true"
+		Release.AspNetCompiler.ForceOverwrite = "true"
+		Release.AspNetCompiler.FixedNames = "false"
+		Release.AspNetCompiler.Debug = "False"
+		VWDPort = "52130"
+		VWDDynamicPort = "false"
+		DefaultWebSiteLanguage = "Visual Basic"
+	EndProjectSection
+EndProject
+Project("{F184B08F-C81C-45F6-A57F-5ABD9991F28F}") = "Gestures", "Gestures\Gestures.vbproj", "{CA4A1896-91E9-41FB-9879-14992CF56158}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WP7AccelerometerSample", "WP7AccelerometerSample\WP7AccelerometerSample.csproj", "{C8C15319-7086-4F05-A523-3D5DB4792317}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Debug|Mixed Platforms = Debug|Mixed Platforms
+		Debug|x86 = Debug|x86
+		Release|Any CPU = Release|Any CPU
+		Release|Mixed Platforms = Release|Mixed Platforms
+		Release|x86 = Release|x86
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{8CD64B05-AE45-49FB-A09B-32EDCD6DAEA2}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{8CD64B05-AE45-49FB-A09B-32EDCD6DAEA2}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{8CD64B05-AE45-49FB-A09B-32EDCD6DAEA2}.Debug|Any CPU.Deploy.0 = Debug|Any CPU
+		{8CD64B05-AE45-49FB-A09B-32EDCD6DAEA2}.Debug|Mixed Platforms.ActiveCfg = Debug|Any CPU
+		{8CD64B05-AE45-49FB-A09B-32EDCD6DAEA2}.Debug|Mixed Platforms.Build.0 = Debug|Any CPU
+		{8CD64B05-AE45-49FB-A09B-32EDCD6DAEA2}.Debug|Mixed Platforms.Deploy.0 = Debug|Any CPU
+		{8CD64B05-AE45-49FB-A09B-32EDCD6DAEA2}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{8CD64B05-AE45-49FB-A09B-32EDCD6DAEA2}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{8CD64B05-AE45-49FB-A09B-32EDCD6DAEA2}.Release|Any CPU.Build.0 = Release|Any CPU
+		{8CD64B05-AE45-49FB-A09B-32EDCD6DAEA2}.Release|Any CPU.Deploy.0 = Release|Any CPU
+		{8CD64B05-AE45-49FB-A09B-32EDCD6DAEA2}.Release|Mixed Platforms.ActiveCfg = Release|Any CPU
+		{8CD64B05-AE45-49FB-A09B-32EDCD6DAEA2}.Release|Mixed Platforms.Build.0 = Release|Any CPU
+		{8CD64B05-AE45-49FB-A09B-32EDCD6DAEA2}.Release|Mixed Platforms.Deploy.0 = Release|Any CPU
+		{8CD64B05-AE45-49FB-A09B-32EDCD6DAEA2}.Release|x86.ActiveCfg = Release|Any CPU
+		{182C73D2-F2A2-460C-8FCF-6083D7C4CA65}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{182C73D2-F2A2-460C-8FCF-6083D7C4CA65}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{182C73D2-F2A2-460C-8FCF-6083D7C4CA65}.Debug|Mixed Platforms.ActiveCfg = Debug|Any CPU
+		{182C73D2-F2A2-460C-8FCF-6083D7C4CA65}.Debug|Mixed Platforms.Build.0 = Debug|Any CPU
+		{182C73D2-F2A2-460C-8FCF-6083D7C4CA65}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{182C73D2-F2A2-460C-8FCF-6083D7C4CA65}.Release|Any CPU.ActiveCfg = Debug|Any CPU
+		{182C73D2-F2A2-460C-8FCF-6083D7C4CA65}.Release|Any CPU.Build.0 = Debug|Any CPU
+		{182C73D2-F2A2-460C-8FCF-6083D7C4CA65}.Release|Mixed Platforms.ActiveCfg = Debug|Any CPU
+		{182C73D2-F2A2-460C-8FCF-6083D7C4CA65}.Release|Mixed Platforms.Build.0 = Debug|Any CPU
+		{182C73D2-F2A2-460C-8FCF-6083D7C4CA65}.Release|x86.ActiveCfg = Debug|Any CPU
+		{CA4A1896-91E9-41FB-9879-14992CF56158}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{CA4A1896-91E9-41FB-9879-14992CF56158}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{CA4A1896-91E9-41FB-9879-14992CF56158}.Debug|Mixed Platforms.ActiveCfg = Debug|Any CPU
+		{CA4A1896-91E9-41FB-9879-14992CF56158}.Debug|Mixed Platforms.Build.0 = Debug|Any CPU
+		{CA4A1896-91E9-41FB-9879-14992CF56158}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{CA4A1896-91E9-41FB-9879-14992CF56158}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{CA4A1896-91E9-41FB-9879-14992CF56158}.Release|Any CPU.Build.0 = Release|Any CPU
+		{CA4A1896-91E9-41FB-9879-14992CF56158}.Release|Mixed Platforms.ActiveCfg = Release|Any CPU
+		{CA4A1896-91E9-41FB-9879-14992CF56158}.Release|Mixed Platforms.Build.0 = Release|Any CPU
+		{CA4A1896-91E9-41FB-9879-14992CF56158}.Release|x86.ActiveCfg = Release|Any CPU
+		{C8C15319-7086-4F05-A523-3D5DB4792317}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{C8C15319-7086-4F05-A523-3D5DB4792317}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{C8C15319-7086-4F05-A523-3D5DB4792317}.Debug|Any CPU.Deploy.0 = Debug|Any CPU
+		{C8C15319-7086-4F05-A523-3D5DB4792317}.Debug|Mixed Platforms.ActiveCfg = Debug|Any CPU
+		{C8C15319-7086-4F05-A523-3D5DB4792317}.Debug|Mixed Platforms.Build.0 = Debug|Any CPU
+		{C8C15319-7086-4F05-A523-3D5DB4792317}.Debug|Mixed Platforms.Deploy.0 = Debug|Any CPU
+		{C8C15319-7086-4F05-A523-3D5DB4792317}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{C8C15319-7086-4F05-A523-3D5DB4792317}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{C8C15319-7086-4F05-A523-3D5DB4792317}.Release|Any CPU.Build.0 = Release|Any CPU
+		{C8C15319-7086-4F05-A523-3D5DB4792317}.Release|Any CPU.Deploy.0 = Release|Any CPU
+		{C8C15319-7086-4F05-A523-3D5DB4792317}.Release|Mixed Platforms.ActiveCfg = Release|Any CPU
+		{C8C15319-7086-4F05-A523-3D5DB4792317}.Release|Mixed Platforms.Build.0 = Release|Any CPU
+		{C8C15319-7086-4F05-A523-3D5DB4792317}.Release|Mixed Platforms.Deploy.0 = Release|Any CPU
+		{C8C15319-7086-4F05-A523-3D5DB4792317}.Release|x86.ActiveCfg = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+EndGlobal

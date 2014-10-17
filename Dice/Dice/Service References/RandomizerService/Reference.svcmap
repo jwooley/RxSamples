@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<ReferenceGroup xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema" ID="a9ad26f4-b11a-429c-a658-38c96cf68b21" xmlns="urn:schemas-microsoft-com:xml-wcfservicemap">
+<ReferenceGroup xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema" ID="0aeafb01-396b-4df0-a1da-de24fcdffe44" xmlns="urn:schemas-microsoft-com:xml-wcfservicemap">
   <ClientOptions>
     <GenerateAsynchronousMethods>true</GenerateAsynchronousMethods>
     <EnableDataBinding>true</EnableDataBinding>
@@ -20,13 +20,14 @@
     <ServiceContractMappings />
   </ClientOptions>
   <MetadataSources>
-    <MetadataSource Address="http://localhost:14995/Service/Randomizer.svc" Protocol="http" SourceId="1" />
+    <MetadataSource Address="http://192.168.1.22:49152/Randomizer.svc" Protocol="http" SourceId="1" />
   </MetadataSources>
   <Metadata>
-    <MetadataFile FileName="Randomizer.xsd" MetadataType="Schema" ID="e353a28d-eb30-4155-be8b-f07561a4d726" SourceId="1" SourceUrl="http://localhost:14995/Service/Randomizer.svc?xsd=xsd1" />
-    <MetadataFile FileName="Randomizer1.xsd" MetadataType="Schema" ID="d1ff3cd4-6226-46b2-ab28-f8305c973c90" SourceId="1" SourceUrl="http://localhost:14995/Service/Randomizer.svc?xsd=xsd0" />
-    <MetadataFile FileName="Randomizer.wsdl" MetadataType="Wsdl" ID="2f915574-a9e3-405b-a19a-ec066b063493" SourceId="1" SourceUrl="http://localhost:14995/Service/Randomizer.svc?wsdl" />
-    <MetadataFile FileName="Randomizer.disco" MetadataType="Disco" ID="7c95e01e-5403-4851-a7bd-d30cc8743faf" SourceId="1" SourceUrl="http://localhost:14995/Service/Randomizer.svc?disco" />
+    <MetadataFile FileName="Randomizer.wsdl" MetadataType="Wsdl" ID="f6b6fe82-2801-4355-acb9-ab693bedada2" SourceId="1" SourceUrl="http://192.168.1.22:49152/Randomizer.svc?wsdl" />
+    <MetadataFile FileName="Randomizer.xsd" MetadataType="Schema" ID="49ebd92c-4034-4eb2-af94-ae55429d0af3" SourceId="1" SourceUrl="http://192.168.1.22:49152/Randomizer.svc?xsd=xsd0" />
+    <MetadataFile FileName="Randomizer1.xsd" MetadataType="Schema" ID="ea656219-35f2-444f-bd97-d902d47a62b9" SourceId="1" SourceUrl="http://192.168.1.22:49152/Randomizer.svc?xsd=xsd2" />
+    <MetadataFile FileName="Randomizer.disco" MetadataType="Disco" ID="4153b63d-afb9-47ca-99b6-f5047a6cc023" SourceId="1" SourceUrl="http://192.168.1.22:49152/Randomizer.svc?disco" />
+    <MetadataFile FileName="Randomizer2.xsd" MetadataType="Schema" ID="63ec68e7-9cd9-4975-a6c3-e95da77ef4db" SourceId="1" SourceUrl="http://192.168.1.22:49152/Randomizer.svc?xsd=xsd1" />
   </Metadata>
   <Extensions>
     <ExtensionFile FileName="configuration91.svcinfo" Name="configuration91.svcinfo" />

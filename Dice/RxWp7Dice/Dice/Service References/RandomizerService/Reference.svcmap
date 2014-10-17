@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ReferenceGroup xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema" ID="6380ae45-09c5-418b-8552-435b3c20dc96" xmlns="urn:schemas-microsoft-com:xml-wcfservicemap">
+  <ClientOptions>
+    <GenerateAsynchronousMethods>true</GenerateAsynchronousMethods>
+    <EnableDataBinding>true</EnableDataBinding>
+    <ExcludedTypes />
+    <ImportXmlTypes>false</ImportXmlTypes>
+    <GenerateInternalTypes>false</GenerateInternalTypes>
+    <GenerateMessageContracts>false</GenerateMessageContracts>
+    <NamespaceMappings />
+    <CollectionMappings>
+      <CollectionMapping TypeName="System.Collections.ObjectModel.ObservableCollection`1" Category="List" />
+    </CollectionMappings>
+    <GenerateSerializableTypes>false</GenerateSerializableTypes>
+    <Serializer>Auto</Serializer>
+    <UseSerializerForFaults>true</UseSerializerForFaults>
+    <ReferenceAllAssemblies>true</ReferenceAllAssemblies>
+    <ReferencedAssemblies />
+    <ReferencedDataContractTypes />
+    <ServiceContractMappings />
+  </ClientOptions>
+  <MetadataSources>
+    <MetadataSource Address="http://localhost:52130/Service/Randomizer.svc" Protocol="http" SourceId="1" />
+  </MetadataSources>
+  <Metadata>
+    <MetadataFile FileName="Randomizer.xsd" MetadataType="Schema" ID="4df17ec0-5a4f-4655-a5b2-ab600f4247ab" SourceId="1" SourceUrl="http://localhost:52130/Service/Randomizer.svc?xsd=xsd0" />
+    <MetadataFile FileName="Randomizer.wsdl" MetadataType="Wsdl" ID="6555866c-c800-4d9d-9e4e-29ac983c76c6" SourceId="1" SourceUrl="http://localhost:52130/Service/Randomizer.svc?wsdl" />
+    <MetadataFile FileName="Randomizer.disco" MetadataType="Disco" ID="d2dd4f24-f88f-4663-83df-091fd090b7e1" SourceId="1" SourceUrl="http://localhost:52130/Service/Randomizer.svc?disco" />
+    <MetadataFile FileName="Randomizer1.xsd" MetadataType="Schema" ID="e31400d1-4fd9-4363-b572-589f5becdfb2" SourceId="1" SourceUrl="http://localhost:52130/Service/Randomizer.svc?xsd=xsd2" />
+    <MetadataFile FileName="Randomizer2.xsd" MetadataType="Schema" ID="2a3917c3-7cd6-4d1f-aadf-64a64629b357" SourceId="1" SourceUrl="http://localhost:52130/Service/Randomizer.svc?xsd=xsd1" />
+  </Metadata>
+  <Extensions>
+    <ExtensionFile FileName="configuration91.svcinfo" Name="configuration91.svcinfo" />
+    <ExtensionFile FileName="configuration.svcinfo" Name="configuration.svcinfo" />
+  </Extensions>
+</ReferenceGroup>
