@@ -5,8 +5,8 @@
 <html xmlns="http://www.w3.org/1999/xhtml">
 <head runat="server">
     <title></title>
-    <script src="Scripts/jquery-2.1.0.js"></script>
-    <script src="Scripts/jquery.signalR-0.5.2.js" type="text/javascript"></script>
+    <script src="Scripts/jquery-2.1.1.js"></script>
+    <script src="Scripts/jquery.signalR-2.1.1.js" type="text/javascript"></script>
     <script src="/signalr/hubs" type="text/javascript"></script>
     <script type="text/javascript">
         $(function () {
@@ -14,7 +14,7 @@
             var hub = $.connection.observableSensorHub;
 
             // Declare a function on the chat hub so the server can invoke it
-            hub.Broadcast = function (value) {
+            hub.client.Broadcast = function (value) {
                 $('#values').append('<li>' + value.Time + ': ' + value.Value + '</li>');
             };
 

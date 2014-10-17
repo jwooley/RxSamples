@@ -1,12 +1,12 @@
 ﻿Option Strict Off
 
+Imports Microsoft.AspNet.SignalR
 Imports Microsoft.VisualBasic
-Imports SignalR.Hubs
 
 Public Class Chat
     Inherits Hub
 
     Public Sub Send(message As String)
-        Clients.addMessage(message)
+        Clients.All.addMessage(message)
     End Sub
 End Class

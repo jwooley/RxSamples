@@ -64,7 +64,7 @@ Class MainWindow
                                 Where(Function(reading) reading.SensorType = "2").
                                 Buffer(TimeSpan.FromSeconds(3))
 
-        heartbeatAggregate.ObserveOnDispatcher.Subscribe(Sub(group) Heartbeat.Content = group.Count)
+        heartbeatAggregate.ObserveOnDispatcher.Subscribe(Sub(group) Heartbeat.Content = "2's per minute: " + (group.Count * 20).ToString())
 
     End Sub
 

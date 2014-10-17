@@ -2,36 +2,48 @@
 
 ;(function (undefined) {
 
-    var objectTypes = {
-        'boolean': false,
-        'function': true,
-        'object': true,
-        'number': false,
-        'string': false,
-        'undefined': false
-    };
+  var objectTypes = {
+    'boolean': false,
+    'function': true,
+    'object': true,
+    'number': false,
+    'string': false,
+    'undefined': false
+  };
 
-    var root = (objectTypes[typeof window] && window) || this,
-        freeExports = objectTypes[typeof exports] && exports && !exports.nodeType && exports,
-        freeModule = objectTypes[typeof module] && module && !module.nodeType && module,
-        moduleExports = freeModule && freeModule.exports === freeExports && freeExports,
-        freeGlobal = objectTypes[typeof global] && global;
-    
-    if (freeGlobal && (freeGlobal.global === freeGlobal || freeGlobal.window === freeGlobal)) {
-        root = freeGlobal;
-    }
+  var root = (objectTypes[typeof window] && window) || this,
+    freeExports = objectTypes[typeof exports] && exports && !exports.nodeType && exports,
+    freeModule = objectTypes[typeof module] && module && !module.nodeType && module,
+    moduleExports = freeModule && freeModule.exports === freeExports && freeExports,
+    freeGlobal = objectTypes[typeof global] && global;
+  
+  if (freeGlobal && (freeGlobal.global === freeGlobal || freeGlobal.window === freeGlobal)) {
+    root = freeGlobal;
+  }
 
-    var Rx = { internals: {}, config: {} };
+  var Rx = { 
+      internals: {}, 
+      config: {
+        Promise: root.Promise // Detect if promise exists
+      },
+      helpers: { }
+  };
     
   // Defaults
-  function noop() { }
-  function identity(x) { return x; }
-  var defaultNow = (function () { return !!Date.now ? Date.now : function () { return +new Date; }; }());
-  function defaultComparer(x, y) { return isEqual(x, y); }
-  function defaultSubComparer(x, y) { return x - y; }
-  function defaultKeySerializer(x) { return x.toString(); }
-  function defaultError(err) { throw err; }
-  function isPromise(p) { return typeof p.then === 'function' && p.then !== Rx.Observable.prototype.then; }
+  var noop = Rx.helpers.noop = function () { },
+    notDefined = Rx.helpers.notDefined = function (x) { return typeof x === 'undefined'; },
+    isScheduler = Rx.helpers.isScheduler = function (x) { return x instanceof Rx.Scheduler; },
+    identity = Rx.helpers.identity = function (x) { return x; },
+    pluck = Rx.helpers.pluck = function (property) { return function (x) { return x[property]; }; },
+    just = Rx.helpers.just = function (value) { return function () { return value; }; },    
+    defaultNow = Rx.helpers.defaultNow = (function () { return !!Date.now ? Date.now : function () { return +new Date; }; }()),
+    defaultComparer = Rx.helpers.defaultComparer = function (x, y) { return isEqual(x, y); },
+    defaultSubComparer = Rx.helpers.defaultSubComparer = function (x, y) { return x > y ? 1 : (x < y ? -1 : 0); },
+    defaultKeySerializer = Rx.helpers.defaultKeySerializer = function (x) { return x.toString(); },
+    defaultError = Rx.helpers.defaultError = function (err) { throw err; },
+    isPromise = Rx.helpers.isPromise = function (p) { return !!p && typeof p.then === 'function'; },
+    asArray = Rx.helpers.asArray = function () { return Array.prototype.slice.call(arguments); },
+    not = Rx.helpers.not = function (a) { return !a; };
 
   // Errors
   var sequenceContainsNoElements = 'Sequence contains no elements.';
@@ -40,14 +52,13 @@
   function checkDisposed() { if (this.isDisposed) { throw new Error(objectDisposed); } }
   
   // Shim in iterator support
-  var $iterator$ = (typeof Symbol === 'object' && Symbol.iterator) ||
+  var $iterator$ = (typeof Symbol === 'function' && Symbol.iterator) ||
     '_es6shim_iterator_';
-  // Firefox ships a partial implementation using the name @@iterator.
-  // https://bugzilla.mozilla.org/show_bug.cgi?id=907077#c14
-  // So use that name if we detect it.
+  // Bug for mozilla version
   if (root.Set && typeof new root.Set()['@@iterator'] === 'function') {
     $iterator$ = '@@iterator';
   }
+  
   var doneEnumerator = { done: true, value: undefined };
 
   /** `Object#toString` result shortcuts */
@@ -71,9 +82,9 @@
     propertyIsEnumerable = objectProto.propertyIsEnumerable;
 
   try {
-      suportNodeClass = !(toString.call(document) == objectClass && !({ 'toString': 0 } + ''));
+    suportNodeClass = !(toString.call(document) == objectClass && !({ 'toString': 0 } + ''));
   } catch(e) {
-      suportNodeClass = true;
+    suportNodeClass = true;
   }
 
   var shadowedProps = [
@@ -190,7 +201,7 @@
   }
 
   function isFunction(value) {
-    return typeof value == 'function';
+    return typeof value == 'function' || false;
   }
 
   // fallback for older versions of Chrome and Safari
@@ -718,62 +729,56 @@
      */
     var disposableEmpty = Disposable.empty = { dispose: noop };
 
-    var BooleanDisposable = (function () {
-        function BooleanDisposable (isSingle) {
-            this.isSingle = isSingle;
-            this.isDisposed = false;
-            this.current = null;
-        }
+  var BooleanDisposable = (function () {
+    function BooleanDisposable (isSingle) {
+      this.isSingle = isSingle;
+      this.isDisposed = false;
+      this.current = null;
+    }
 
-        var booleanDisposablePrototype = BooleanDisposable.prototype;
+    var booleanDisposablePrototype = BooleanDisposable.prototype;
 
-        /**
-         * Gets the underlying disposable.
-         * @return The underlying disposable.
-         */
-        booleanDisposablePrototype.getDisposable = function () {
-            return this.current;
-        };
+    /**
+     * Gets the underlying disposable.
+     * @return The underlying disposable.
+     */
+    booleanDisposablePrototype.getDisposable = function () {
+      return this.current;
+    };
 
-        /**
-         * Sets the underlying disposable.
-         * @param {Disposable} value The new underlying disposable.
-         */  
-        booleanDisposablePrototype.setDisposable = function (value) {
-            if (this.current && this.isSingle) {
-                throw new Error('Disposable has already been assigned');
-            }
+    /**
+     * Sets the underlying disposable.
+     * @param {Disposable} value The new underlying disposable.
+     */  
+    booleanDisposablePrototype.setDisposable = function (value) {
+      if (this.current && this.isSingle) {
+        throw new Error('Disposable has already been assigned');
+      }
 
-            var shouldDispose = this.isDisposed, old;
-            if (!shouldDispose) {
-                old = this.current;
-                this.current = value;
-            }
-            if (old) {
-                old.dispose();
-            }
-            if (shouldDispose && value) {
-                value.dispose();
-            }
-        };
+      var shouldDispose = this.isDisposed, old;
+      if (!shouldDispose) {
+        old = this.current;
+        this.current = value;
+      }
+      old && old.dispose();
+      shouldDispose && value && value.dispose();
+    };
 
-        /** 
-         * Disposes the underlying disposable as well as all future replacements.
-         */
-        booleanDisposablePrototype.dispose = function () {
-            var old;
-            if (!this.isDisposed) {
-                this.isDisposed = true;
-                old = this.current;
-                this.current = null;
-            }
-            if (old) {
-                old.dispose();
-            }
-        };
+    /** 
+     * Disposes the underlying disposable as well as all future replacements.
+     */
+    booleanDisposablePrototype.dispose = function () {
+      var old;
+      if (!this.isDisposed) {
+        this.isDisposed = true;
+        old = this.current;
+        this.current = null;
+      }
+      old && old.dispose();
+    };
 
-        return BooleanDisposable;
-    }());
+    return BooleanDisposable;
+  }());
 
     /**
      * Represents a disposable resource which only allows a single assignment of its underlying disposable resource.
@@ -1142,87 +1147,84 @@
 
     var normalizeTime = Scheduler.normalize;
     
-    /**
-     * Gets a scheduler that schedules work immediately on the current thread.
-     */    
-    var immediateScheduler = Scheduler.immediate = (function () {
+  /**
+   * Gets a scheduler that schedules work immediately on the current thread.
+   */    
+  var immediateScheduler = Scheduler.immediate = (function () {
 
-        function scheduleNow(state, action) { return action(this, state); }
+    function scheduleNow(state, action) { return action(this, state); }
 
-        function scheduleRelative(state, dueTime, action) {
-            var dt = normalizeTime(dt);
-            while (dt - this.now() > 0) { }
-            return action(this, state);
+    function scheduleRelative(state, dueTime, action) {
+      var dt = normalizeTime(dt);
+      while (dt - this.now() > 0) { }
+      return action(this, state);
+    }
+
+    function scheduleAbsolute(state, dueTime, action) {
+      return this.scheduleWithRelativeAndState(state, dueTime - this.now(), action);
+    }
+
+    return new Scheduler(defaultNow, scheduleNow, scheduleRelative, scheduleAbsolute);
+  }());
+
+  /** 
+   * Gets a scheduler that schedules work as soon as possible on the current thread.
+   */
+  var currentThreadScheduler = Scheduler.currentThread = (function () {
+    var queue;
+
+    function runTrampoline (q) {
+      var item;
+      while (q.length > 0) {
+        item = q.dequeue();
+        if (!item.isCancelled()) {
+          // Note, do not schedule blocking work!
+          while (item.dueTime - Scheduler.now() > 0) {
+          }
+          if (!item.isCancelled()) {
+            item.invoke();
+          }
         }
+      }
+    }
 
-        function scheduleAbsolute(state, dueTime, action) {
-            return this.scheduleWithRelativeAndState(state, dueTime - this.now(), action);
+    function scheduleNow(state, action) {
+      return this.scheduleWithRelativeAndState(state, 0, action);
+    }
+
+    function scheduleRelative(state, dueTime, action) {
+      var dt = this.now() + Scheduler.normalize(dueTime),
+          si = new ScheduledItem(this, state, action, dt);
+
+      if (!queue) {
+        queue = new PriorityQueue(4);
+        queue.enqueue(si);
+        try {
+          runTrampoline(queue);
+        } catch (e) { 
+          throw e;
+        } finally {
+          queue = null;
         }
+      } else {
+        queue.enqueue(si);
+      }
+      return si.disposable;
+    }
 
-        return new Scheduler(defaultNow, scheduleNow, scheduleRelative, scheduleAbsolute);
-    }());
+    function scheduleAbsolute(state, dueTime, action) {
+      return this.scheduleWithRelativeAndState(state, dueTime - this.now(), action);
+    }
 
-    /** 
-     * Gets a scheduler that schedules work as soon as possible on the current thread.
-     */
-    var currentThreadScheduler = Scheduler.currentThread = (function () {
-        var queue;
+    var currentScheduler = new Scheduler(defaultNow, scheduleNow, scheduleRelative, scheduleAbsolute);
+    
+    currentScheduler.scheduleRequired = function () { return !queue; };
+    currentScheduler.ensureTrampoline = function (action) {
+      if (!queue) { this.schedule(action); } else { action(); }
+    };
 
-        function runTrampoline (q) {
-            var item;
-            while (q.length > 0) {
-                item = q.dequeue();
-                if (!item.isCancelled()) {
-                    // Note, do not schedule blocking work!
-                    while (item.dueTime - Scheduler.now() > 0) {
-                    }
-                    if (!item.isCancelled()) {
-                        item.invoke();
-                    }
-                }
-            }            
-        }
-
-        function scheduleNow(state, action) {
-            return this.scheduleWithRelativeAndState(state, 0, action);
-        }
-
-        function scheduleRelative(state, dueTime, action) {
-            var dt = this.now() + Scheduler.normalize(dueTime),
-                    si = new ScheduledItem(this, state, action, dt),
-                    t;
-            if (!queue) {
-                queue = new PriorityQueue(4);
-                queue.enqueue(si);
-                try {
-                    runTrampoline(queue);
-                } catch (e) { 
-                    throw e;
-                } finally {
-                    queue = null;
-                }
-            } else {
-                queue.enqueue(si);
-            }
-            return si.disposable;
-        }
-
-        function scheduleAbsolute(state, dueTime, action) {
-            return this.scheduleWithRelativeAndState(state, dueTime - this.now(), action);
-        }
-
-        var currentScheduler = new Scheduler(defaultNow, scheduleNow, scheduleRelative, scheduleAbsolute);
-        currentScheduler.scheduleRequired = function () { return queue === null; };
-        currentScheduler.ensureTrampoline = function (action) {
-            if (queue === null) {
-                return this.schedule(action);
-            } else {
-                return action();
-            }
-        };
-
-        return currentScheduler;
-    }());
+    return currentScheduler;
+  }());
 
     var SchedulePeriodicRecursive = Rx.internals.SchedulePeriodicRecursive = (function () {
         function tick(command, recurse) {
@@ -1253,278 +1255,249 @@
         return SchedulePeriodicRecursive;
     }());
 
-    
-    var scheduleMethod, clearMethod = noop;
-    (function () {
+  
+  var scheduleMethod, clearMethod = noop;
+  (function () {
 
-        var reNative = RegExp('^' +
-          String(toString)
-            .replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
-            .replace(/toString| for [^\]]+/g, '.*?') + '$'
-        );
+      var reNative = RegExp('^' +
+        String(toString)
+          .replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+          .replace(/toString| for [^\]]+/g, '.*?') + '$'
+      );
 
-        var setImmediate = typeof (setImmediate = freeGlobal && moduleExports && freeGlobal.setImmediate) == 'function' &&
-            !reNative.test(setImmediate) && setImmediate,
-            clearImmediate = typeof (clearImmediate = freeGlobal && moduleExports && freeGlobal.clearImmediate) == 'function' &&
-            !reNative.test(clearImmediate) && clearImmediate;
+      var setImmediate = typeof (setImmediate = freeGlobal && moduleExports && freeGlobal.setImmediate) == 'function' &&
+        !reNative.test(setImmediate) && setImmediate,
+        clearImmediate = typeof (clearImmediate = freeGlobal && moduleExports && freeGlobal.clearImmediate) == 'function' &&
+        !reNative.test(clearImmediate) && clearImmediate;
 
-        function postMessageSupported () {
-            // Ensure not in a worker
-            if (!root.postMessage || root.importScripts) { return false; }
-            var isAsync = false, 
-                oldHandler = root.onmessage;
-            // Test for async
-            root.onmessage = function () { isAsync = true; };
-            root.postMessage('','*');
-            root.onmessage = oldHandler;
+      function postMessageSupported () {
+        // Ensure not in a worker
+        if (!root.postMessage || root.importScripts) { return false; }
+        var isAsync = false, 
+            oldHandler = root.onmessage;
+        // Test for async
+        root.onmessage = function () { isAsync = true; };
+        root.postMessage('','*');
+        root.onmessage = oldHandler;
 
-            return isAsync;
-        }
+        return isAsync;
+      }
 
-        // Use in order, nextTick, setImmediate, postMessage, MessageChannel, script readystatechanged, setTimeout
-        if (typeof process !== 'undefined' && {}.toString.call(process) === '[object process]') {
-            scheduleMethod = process.nextTick;
-        } else if (typeof setImmediate === 'function') {
-            scheduleMethod = setImmediate;
-            clearMethod = clearImmediate;
-        } else if (postMessageSupported()) {
-            var MSG_PREFIX = 'ms.rx.schedule' + Math.random(),
-                tasks = {},
-                taskId = 0;
+      // Use in order, nextTick, setImmediate, postMessage, MessageChannel, script readystatechanged, setTimeout
+      if (typeof process !== 'undefined' && {}.toString.call(process) === '[object process]') {
+        scheduleMethod = process.nextTick;
+      } else if (typeof setImmediate === 'function') {
+        scheduleMethod = setImmediate;
+        clearMethod = clearImmediate;
+      } else if (postMessageSupported()) {
+          var MSG_PREFIX = 'ms.rx.schedule' + Math.random(),
+            tasks = {},
+            taskId = 0;
 
-            function onGlobalPostMessage(event) {
-                // Only if we're a match to avoid any other global events
-                if (typeof event.data === 'string' && event.data.substring(0, MSG_PREFIX.length) === MSG_PREFIX) {
-                    var handleId = event.data.substring(MSG_PREFIX.length),
-                        action = tasks[handleId];
-                    action();
-                    delete tasks[handleId];
-                }
+          function onGlobalPostMessage(event) {
+            // Only if we're a match to avoid any other global events
+            if (typeof event.data === 'string' && event.data.substring(0, MSG_PREFIX.length) === MSG_PREFIX) {
+              var handleId = event.data.substring(MSG_PREFIX.length),
+                action = tasks[handleId];
+              action();
+              delete tasks[handleId];
             }
+          }
 
-            if (root.addEventListener) {
-                root.addEventListener('message', onGlobalPostMessage, false);
-            } else {
-                root.attachEvent('onmessage', onGlobalPostMessage, false);
-            }
+          if (root.addEventListener) {
+            root.addEventListener('message', onGlobalPostMessage, false);
+          } else {
+            root.attachEvent('onmessage', onGlobalPostMessage, false);
+          }
 
-            scheduleMethod = function (action) {
-                var currentId = taskId++;
-                tasks[currentId] = action;
-                root.postMessage(MSG_PREFIX + currentId, '*');
-            };
-        } else if (!!root.MessageChannel) {
-            var channel = new root.MessageChannel(),
-                channelTasks = {},
-                channelTaskId = 0;
+          scheduleMethod = function (action) {
+            var currentId = taskId++;
+            tasks[currentId] = action;
+            root.postMessage(MSG_PREFIX + currentId, '*');
+          };
+      } else if (!!root.MessageChannel) {
+          var channel = new root.MessageChannel(),
+            channelTasks = {},
+            channelTaskId = 0;
 
-            channel.port1.onmessage = function (event) {
-                var id = event.data,
-                    action = channelTasks[id];
-                action();
-                delete channelTasks[id];
-            };
+          channel.port1.onmessage = function (event) {
+            var id = event.data,
+              action = channelTasks[id];
+            action();
+            delete channelTasks[id];
+          };
 
-            scheduleMethod = function (action) {
-                var id = channelTaskId++;
-                channelTasks[id] = action;
-                channel.port2.postMessage(id);     
-            };
-        } else if ('document' in root && 'onreadystatechange' in root.document.createElement('script')) {
-            
-            scheduleMethod = function (action) {
-                var scriptElement = root.document.createElement('script');
-                scriptElement.onreadystatechange = function () { 
-                    action();
-                    scriptElement.onreadystatechange = null;
-                    scriptElement.parentNode.removeChild(scriptElement);
-                    scriptElement = null;  
-                };
-                root.document.documentElement.appendChild(scriptElement);  
-            };
- 
-        } else {
-            scheduleMethod = function (action) { return setTimeout(action, 0); };
-            clearMethod = clearTimeout;
+          scheduleMethod = function (action) {
+            var id = channelTaskId++;
+            channelTasks[id] = action;
+            channel.port2.postMessage(id);     
+          };
+      } else if ('document' in root && 'onreadystatechange' in root.document.createElement('script')) {
+          
+        scheduleMethod = function (action) {
+          var scriptElement = root.document.createElement('script');
+          scriptElement.onreadystatechange = function () { 
+            action();
+            scriptElement.onreadystatechange = null;
+            scriptElement.parentNode.removeChild(scriptElement);
+            scriptElement = null;  
+          };
+          root.document.documentElement.appendChild(scriptElement);  
+        };
+
+      } else {
+        scheduleMethod = function (action) { return setTimeout(action, 0); };
+        clearMethod = clearTimeout;
+      }
+  }());
+
+  /** 
+   * Gets a scheduler that schedules work via a timed callback based upon platform.
+   */
+  var timeoutScheduler = Scheduler.timeout = (function () {
+
+    function scheduleNow(state, action) {
+        var scheduler = this,
+          disposable = new SingleAssignmentDisposable();
+        var id = scheduleMethod(function () {
+          if (!disposable.isDisposed) {
+            disposable.setDisposable(action(scheduler, state));
+          }
+        });
+        return new CompositeDisposable(disposable, disposableCreate(function () {
+          clearMethod(id);
+        }));
+    }
+
+    function scheduleRelative(state, dueTime, action) {
+        var scheduler = this,
+          dt = Scheduler.normalize(dueTime);
+        if (dt === 0) {
+          return scheduler.scheduleWithState(state, action);
         }
-    }());
+        var disposable = new SingleAssignmentDisposable();
+        var id = setTimeout(function () {
+          if (!disposable.isDisposed) {
+            disposable.setDisposable(action(scheduler, state));
+          }
+        }, dt);
+        return new CompositeDisposable(disposable, disposableCreate(function () {
+          clearTimeout(id);
+        }));
+    }
 
-    /** 
-     * Gets a scheduler that schedules work via a timed callback based upon platform.
-     */
-    var timeoutScheduler = Scheduler.timeout = (function () {
+    function scheduleAbsolute(state, dueTime, action) {
+      return this.scheduleWithRelativeAndState(state, dueTime - this.now(), action);
+    }
 
-        function scheduleNow(state, action) {
-            var scheduler = this,
-                disposable = new SingleAssignmentDisposable();
-            var id = scheduleMethod(function () {
-                if (!disposable.isDisposed) {
-                    disposable.setDisposable(action(scheduler, state));
-                }
-            });
-            return new CompositeDisposable(disposable, disposableCreate(function () {
-                clearMethod(id);
-            }));
-        }
+    return new Scheduler(defaultNow, scheduleNow, scheduleRelative, scheduleAbsolute);
+  })();
 
-        function scheduleRelative(state, dueTime, action) {
-            var scheduler = this,
-                dt = Scheduler.normalize(dueTime);
-            if (dt === 0) {
-                return scheduler.scheduleWithState(state, action);
-            }
-            var disposable = new SingleAssignmentDisposable();
-            var id = setTimeout(function () {
-                if (!disposable.isDisposed) {
-                    disposable.setDisposable(action(scheduler, state));
-                }
-            }, dt);
-            return new CompositeDisposable(disposable, disposableCreate(function () {
-                clearTimeout(id);
-            }));
-        }
-
-        function scheduleAbsolute(state, dueTime, action) {
-            return this.scheduleWithRelativeAndState(state, dueTime - this.now(), action);
-        }
-
-        return new Scheduler(defaultNow, scheduleNow, scheduleRelative, scheduleAbsolute);
-    })();
+  /**
+   *  Represents a notification to an observer.
+   */
+  var Notification = Rx.Notification = (function () {
+    function Notification(kind, hasValue) { 
+      this.hasValue = hasValue == null ? false : hasValue;
+      this.kind = kind;
+    }
 
     /**
-     *  Represents a notification to an observer.
+     * Invokes the delegate corresponding to the notification or the observer's method corresponding to the notification and returns the produced result.
+     * 
+     * @memberOf Notification
+     * @param {Any} observerOrOnNext Delegate to invoke for an OnNext notification or Observer to invoke the notification on..
+     * @param {Function} onError Delegate to invoke for an OnError notification.
+     * @param {Function} onCompleted Delegate to invoke for an OnCompleted notification.
+     * @returns {Any} Result produced by the observation.
      */
-    var Notification = Rx.Notification = (function () {
-        function Notification(kind, hasValue) { 
-            this.hasValue = hasValue == null ? false : hasValue;
-            this.kind = kind;
-        }
-
-        var NotificationPrototype = Notification.prototype;
-
-        /**
-         * Invokes the delegate corresponding to the notification or the observer's method corresponding to the notification and returns the produced result.
-         * 
-         * @memberOf Notification
-         * @param {Any} observerOrOnNext Delegate to invoke for an OnNext notification or Observer to invoke the notification on..
-         * @param {Function} onError Delegate to invoke for an OnError notification.
-         * @param {Function} onCompleted Delegate to invoke for an OnCompleted notification.
-         * @returns {Any} Result produced by the observation.
-         */
-        NotificationPrototype.accept = function (observerOrOnNext, onError, onCompleted) {
-            if (arguments.length === 1 && typeof observerOrOnNext === 'object') {
-                return this._acceptObservable(observerOrOnNext);
-            }
-            return this._accept(observerOrOnNext, onError, onCompleted);
-        };
-
-        /**
-         * Returns an observable sequence with a single notification.
-         * 
-         * @memberOf Notification
-         * @param {Scheduler} [scheduler] Scheduler to send out the notification calls on.
-         * @returns {Observable} The observable sequence that surfaces the behavior of the notification upon subscription.
-         */
-        NotificationPrototype.toObservable = function (scheduler) {
-            var notification = this;
-            scheduler || (scheduler = immediateScheduler);
-            return new AnonymousObservable(function (observer) {
-                return scheduler.schedule(function () {
-                    notification._acceptObservable(observer);
-                    if (notification.kind === 'N') {
-                        observer.onCompleted();
-                    }
-                });
-            });
-        };
-
-        return Notification;
-    })();
+    Notification.prototype.accept = function (observerOrOnNext, onError, onCompleted) {
+      return observerOrOnNext && typeof observerOrOnNext === 'object' ?
+        this._acceptObservable(observerOrOnNext) :
+        this._accept(observerOrOnNext, onError, onCompleted);
+    };
 
     /**
-     * Creates an object that represents an OnNext notification to an observer.
-     * @param {Any} value The value contained in the notification.
-     * @returns {Notification} The OnNext notification containing the value.
+     * Returns an observable sequence with a single notification.
+     * 
+     * @memberOf Notifications
+     * @param {Scheduler} [scheduler] Scheduler to send out the notification calls on.
+     * @returns {Observable} The observable sequence that surfaces the behavior of the notification upon subscription.
      */
-    var notificationCreateOnNext = Notification.createOnNext = (function () {
+    Notification.prototype.toObservable = function (scheduler) {
+      var notification = this;
+      isScheduler(scheduler) || (scheduler = immediateScheduler);
+      return new AnonymousObservable(function (observer) {
+        return scheduler.schedule(function () {
+          notification._acceptObservable(observer);
+          notification.kind === 'N' && observer.onCompleted();
+        });
+      });
+    };
 
-        function _accept (onNext) {
-            return onNext(this.value);
-        }
+    return Notification;
+  })();
 
-        function _acceptObservable(observer) {
-            return observer.onNext(this.value);
-        }
+  /**
+   * Creates an object that represents an OnNext notification to an observer.
+   * @param {Any} value The value contained in the notification.
+   * @returns {Notification} The OnNext notification containing the value.
+   */
+  var notificationCreateOnNext = Notification.createOnNext = (function () {
 
-        function toString () {
-            return 'OnNext(' + this.value + ')';
-        }
+      function _accept (onNext) { return onNext(this.value); }
+      function _acceptObservable(observer) { return observer.onNext(this.value); }
+      function toString () { return 'OnNext(' + this.value + ')'; }
 
-        return function (value) {
-            var notification = new Notification('N', true);
-            notification.value = value;
-            notification._accept = _accept;
-            notification._acceptObservable = _acceptObservable;
-            notification.toString = toString;
-            return notification;
-        };
-    }());
+      return function (value) {
+        var notification = new Notification('N', true);
+        notification.value = value;
+        notification._accept = _accept;
+        notification._acceptObservable = _acceptObservable;
+        notification.toString = toString;
+        return notification;
+      };
+  }());
 
-    /**
-     * Creates an object that represents an OnError notification to an observer.
-     * @param {Any} error The exception contained in the notification.
-     * @returns {Notification} The OnError notification containing the exception.
-     */
-    var notificationCreateOnError = Notification.createOnError = (function () {
+  /**
+   * Creates an object that represents an OnError notification to an observer.
+   * @param {Any} error The exception contained in the notification.
+   * @returns {Notification} The OnError notification containing the exception.
+   */
+  var notificationCreateOnError = Notification.createOnError = (function () {
 
-        function _accept (onNext, onError) {
-            return onError(this.exception);
-        }
+    function _accept (onNext, onError) { return onError(this.exception); }
+    function _acceptObservable(observer) { return observer.onError(this.exception); }
+    function toString () { return 'OnError(' + this.exception + ')'; }
 
-        function _acceptObservable(observer) {
-            return observer.onError(this.exception);
-        }
+    return function (exception) {
+      var notification = new Notification('E');
+      notification.exception = exception;
+      notification._accept = _accept;
+      notification._acceptObservable = _acceptObservable;
+      notification.toString = toString;
+      return notification;
+      };
+  }());
 
-        function toString () {
-            return 'OnError(' + this.exception + ')';
-        }
+  /**
+   * Creates an object that represents an OnCompleted notification to an observer.
+   * @returns {Notification} The OnCompleted notification.
+   */
+  var notificationCreateOnCompleted = Notification.createOnCompleted = (function () {
 
-        return function (exception) {
-            var notification = new Notification('E');
-            notification.exception = exception;
-            notification._accept = _accept;
-            notification._acceptObservable = _acceptObservable;
-            notification.toString = toString;
-            return notification;
-        };
-    }());
+      function _accept (onNext, onError, onCompleted) { return onCompleted(); }
+      function _acceptObservable(observer) { return observer.onCompleted(); }
+      function toString () { return 'OnCompleted()'; }
 
-    /**
-     * Creates an object that represents an OnCompleted notification to an observer.
-     * @returns {Notification} The OnCompleted notification.
-     */
-    var notificationCreateOnCompleted = Notification.createOnCompleted = (function () {
-
-        function _accept (onNext, onError, onCompleted) {
-            return onCompleted();
-        }
-
-        function _acceptObservable(observer) {
-            return observer.onCompleted();
-        }
-
-        function toString () {
-            return 'OnCompleted()';
-        }
-
-        return function () {
-            var notification = new Notification('C');
-            notification._accept = _accept;
-            notification._acceptObservable = _acceptObservable;
-            notification.toString = toString;
-            return notification;
-        };
-    }());
+      return function () {
+        var notification = new Notification('C');
+        notification._accept = _accept;
+        notification._acceptObservable = _acceptObservable;
+        notification.toString = toString;
+        return notification;
+      };
+  }());
 
   var Enumerator = Rx.internals.Enumerator = function (next) {
     this._next = next;
@@ -1537,55 +1510,59 @@
   Enumerator.prototype[$iterator$] = function () { return this; }
 
   var Enumerable = Rx.internals.Enumerable = function (iterator) {
-      this._iterator = iterator;
+    this._iterator = iterator;
   };
 
   Enumerable.prototype[$iterator$] = function () {
-      return this._iterator();
+    return this._iterator();
   };
 
   Enumerable.prototype.concat = function () {
-      var sources = this;
-      return new AnonymousObservable(function (observer) {
-        var e;
+    var sources = this;
+    return new AnonymousObservable(function (observer) {
+      var e;
+      try {
+        e = sources[$iterator$]();
+      } catch(err) {
+        observer.onError();
+        return;
+      }
+
+      var isDisposed, 
+        subscription = new SerialDisposable();
+      var cancelable = immediateScheduler.scheduleRecursive(function (self) {
+        var currentItem;
+        if (isDisposed) { return; }
+
         try {
-          e = sources[$iterator$]();
-        } catch(err) {
-          observer.onError();
+          currentItem = e.next();
+        } catch (ex) {
+          observer.onError(ex);
           return;
         }
 
-        var isDisposed, 
-          subscription = new SerialDisposable();
-        var cancelable = immediateScheduler.scheduleRecursive(function (self) {
-          var currentItem;
-          if (isDisposed) { return; }
+        if (currentItem.done) {
+          observer.onCompleted();
+          return;
+        }
 
-          try {
-            currentItem = e.next();
-          } catch (ex) {
-            observer.onError(ex);
-            return;
-          }
+        // Check if promise
+        var currentValue = currentItem.value;
+        isPromise(currentValue) && (currentValue = observableFromPromise(currentValue));
 
-          if (currentItem.done) {
-            observer.onCompleted();
-            return;
-          }
-
-          var d = new SingleAssignmentDisposable();
-          subscription.setDisposable(d);
-          d.setDisposable(currentItem.value.subscribe(
-            observer.onNext.bind(observer),
-            observer.onError.bind(observer),
-            function () { self(); })
-          );
-        });
-
-        return new CompositeDisposable(subscription, cancelable, disposableCreate(function () {
-          isDisposed = true;
-        }));
+        var d = new SingleAssignmentDisposable();
+        subscription.setDisposable(d);
+        d.setDisposable(currentValue.subscribe(
+          observer.onNext.bind(observer),
+          observer.onError.bind(observer),
+          function () { self(); })
+        );
       });
+
+      return new CompositeDisposable(subscription, cancelable, disposableCreate(function () {
+        isDisposed = true;
+      }));
+    });
   };
 
   Enumerable.prototype.catchException = function () {
@@ -1622,9 +1599,13 @@
           return;
         }
 
+        // Check if promise
+        var currentValue = currentItem.value;
+        isPromise(currentValue) && (currentValue = observableFromPromise(currentValue));        
+
         var d = new SingleAssignmentDisposable();
         subscription.setDisposable(d);
-        d.setDisposable(currentItem.value.subscribe(
+        d.setDisposable(currentValue.subscribe(
           observer.onNext.bind(observer),
           function (exn) {
             lastException = exn;
@@ -1637,7 +1618,6 @@
       }));
     });
   };
-
 
   var enumerableRepeat = Enumerable.repeat = function (value, repeatCount) {
     if (repeatCount == null) { repeatCount = -1; }
@@ -1843,83 +1823,43 @@
     return AnonymousObserver;
   }(AbstractObserver));
 
-    var observableProto;
+  var observableProto;
+
+  /**
+   * Represents a push-style collection.
+   */
+  var Observable = Rx.Observable = (function () {
+
+    function Observable(subscribe) {
+      this._subscribe = subscribe;
+    }
+
+    observableProto = Observable.prototype;
 
     /**
-     * Represents a push-style collection.
+     *  Subscribes an observer to the observable sequence.
+     *  
+     * @example
+     *  1 - source.subscribe();
+     *  2 - source.subscribe(observer);
+     *  3 - source.subscribe(function (x) { console.log(x); });
+     *  4 - source.subscribe(function (x) { console.log(x); }, function (err) { console.log(err); });
+     *  5 - source.subscribe(function (x) { console.log(x); }, function (err) { console.log(err); }, function () { console.log('done'); });
+     *  @param {Mixed} [observerOrOnNext] The object that is to receive notifications or an action to invoke for each element in the observable sequence.
+     *  @param {Function} [onError] Action to invoke upon exceptional termination of the observable sequence.
+     *  @param {Function} [onCompleted] Action to invoke upon graceful termination of the observable sequence.
+     *  @returns {Diposable} The source sequence whose subscriptions and unsubscriptions happen on the specified scheduler. 
      */
-    var Observable = Rx.Observable = (function () {
+    observableProto.subscribe = observableProto.forEach = function (observerOrOnNext, onError, onCompleted) {
+      var subscriber = typeof observerOrOnNext === 'object' ?
+        observerOrOnNext :
+        observerCreate(observerOrOnNext, onError, onCompleted);
 
-        /**
-         * @constructor
-         * @private
-         */
-        function Observable(subscribe) {
-            this._subscribe = subscribe;
-        }
+      return this._subscribe(subscriber);
+    };
 
-        observableProto = Observable.prototype;
-
-        observableProto.finalValue = function () {
-            var source = this;
-            return new AnonymousObservable(function (observer) {
-                var hasValue = false, value;
-                return source.subscribe(function (x) {
-                    hasValue = true;
-                    value = x;
-                }, observer.onError.bind(observer), function () {
-                    if (!hasValue) {
-                        observer.onError(new Error(sequenceContainsNoElements));
-                    } else {
-                        observer.onNext(value);
-                        observer.onCompleted();
-                    }
-                });
-            });
-        };
-
-        /**
-         *  Subscribes an observer to the observable sequence.
-         *  
-         * @example
-         *  1 - source.subscribe();
-         *  2 - source.subscribe(observer);
-         *  3 - source.subscribe(function (x) { console.log(x); });
-         *  4 - source.subscribe(function (x) { console.log(x); }, function (err) { console.log(err); });
-         *  5 - source.subscribe(function (x) { console.log(x); }, function (err) { console.log(err); }, function () { console.log('done'); });
-         *  @param {Mixed} [observerOrOnNext] The object that is to receive notifications or an action to invoke for each element in the observable sequence.
-         *  @param {Function} [onError] Action to invoke upon exceptional termination of the observable sequence.
-         *  @param {Function} [onCompleted] Action to invoke upon graceful termination of the observable sequence.
-         *  @returns {Diposable} The source sequence whose subscriptions and unsubscriptions happen on the specified scheduler. 
-         */
-        observableProto.subscribe = observableProto.forEach = function (observerOrOnNext, onError, onCompleted) {
-            var subscriber;
-            if (typeof observerOrOnNext === 'object') {
-                subscriber = observerOrOnNext;
-            } else {
-                subscriber = observerCreate(observerOrOnNext, onError, onCompleted);
-            }
-
-            return this._subscribe(subscriber);
-        };
-
-        /**
-         *  Creates a list from an observable sequence.
-         *  
-         * @memberOf Observable
-         * @returns An observable sequence containing a single element with a list containing all the elements of the source sequence.  
-         */
-        observableProto.toArray = function () {
-            function accumulator(list, i) {
-                var newList = list.slice(0);
-                newList.push(i);
-                return newList;
-            }
-            return this.scan([], accumulator).startWith([]).finalValue();
-        };
-
-        return Observable;
-    })();
+    return Observable;
+  })();
 
   var ScheduledObserver = Rx.internals.ScheduledObserver = (function (_super) {
     inherits(ScheduledObserver, _super);
@@ -1990,164 +1930,190 @@
     return ScheduledObserver;
   }(AbstractObserver));
 
-    /**
-     *  Creates an observable sequence from a specified subscribe method implementation.
-     *  
-     * @example
-     *  var res = Rx.Observable.create(function (observer) { return function () { } );
-     *  var res = Rx.Observable.create(function (observer) { return Rx.Disposable.empty; } ); 
-     *  var res = Rx.Observable.create(function (observer) { } ); 
-     *  
-     * @param {Function} subscribe Implementation of the resulting observable sequence's subscribe method, returning a function that will be wrapped in a Disposable.
-     * @returns {Observable} The observable sequence with the specified implementation for the Subscribe method.
-     */
-    Observable.create = Observable.createWithDisposable = function (subscribe) {
-        return new AnonymousObservable(subscribe);
-    };
-
-    /**
-     *  Returns an observable sequence that invokes the specified factory function whenever a new observer subscribes.
-     *  
-     * @example
-     *  var res = Rx.Observable.defer(function () { return Rx.Observable.fromArray([1,2,3]); });    
-     * @param {Function} observableFactory Observable factory function to invoke for each observer that subscribes to the resulting sequence.
-     * @returns {Observable} An observable sequence whose observers trigger an invocation of the given observable factory function.
-     */
-    var observableDefer = Observable.defer = function (observableFactory) {
-        return new AnonymousObservable(function (observer) {
-            var result;
-            try {
-                result = observableFactory();
-            } catch (e) {
-                return observableThrow(e).subscribe(observer);
-            }
-            return result.subscribe(observer);
+  /**
+   * Creates a list from an observable sequence.
+   * @returns An observable sequence containing a single element with a list containing all the elements of the source sequence.  
+   */
+  observableProto.toArray = function () {
+    var self = this;
+    return new AnonymousObservable(function(observer) {
+      var arr = [];
+      return self.subscribe(
+        arr.push.bind(arr),
+        observer.onError.bind(observer),
+        function () {
+          observer.onNext(arr);
+          observer.onCompleted();
         });
-    };
-
-    /**
-     *  Returns an empty observable sequence, using the specified scheduler to send out the single OnCompleted message.
-     *  
-     * @example
-     *  var res = Rx.Observable.empty();  
-     *  var res = Rx.Observable.empty(Rx.Scheduler.timeout);  
-     * @param {Scheduler} [scheduler] Scheduler to send the termination call on.
-     * @returns {Observable} An observable sequence with no elements.
-     */
-    var observableEmpty = Observable.empty = function (scheduler) {
-        scheduler || (scheduler = immediateScheduler);
-        return new AnonymousObservable(function (observer) {
-            return scheduler.schedule(function () {
-                observer.onCompleted();
-            });
-        });
-    };
-
-    /**
-     *  Converts an array to an observable sequence, using an optional scheduler to enumerate the array.
-     *  
-     * @example
-     *  var res = Rx.Observable.fromArray([1,2,3]);
-     *  var res = Rx.Observable.fromArray([1,2,3], Rx.Scheduler.timeout);
-     * @param {Scheduler} [scheduler] Scheduler to run the enumeration of the input sequence on.
-     * @returns {Observable} The observable sequence whose elements are pulled from the given enumerable sequence.
-     */
-    var observableFromArray = Observable.fromArray = function (array, scheduler) {
-        scheduler || (scheduler = currentThreadScheduler);
-        return new AnonymousObservable(function (observer) {
-            var count = 0;
-            return scheduler.scheduleRecursive(function (self) {
-                if (count < array.length) {
-                    observer.onNext(array[count++]);
-                    self();
-                } else {
-                    observer.onCompleted();
-                }
-            });
-        });
-    };
+    });
+  };
 
   /**
-   *  Converts an iterable into an Observable sequence
+   *  Creates an observable sequence from a specified subscribe method implementation.
    *  
    * @example
-   *  var res = Rx.Observable.fromIterable(new Map());
-   *  var res = Rx.Observable.fromIterable(new Set(), Rx.Scheduler.timeout);
-   * @param {Scheduler} [scheduler] Scheduler to run the enumeration of the input sequence on.
-   * @returns {Observable} The observable sequence whose elements are pulled from the given generator sequence.
+   *  var res = Rx.Observable.create(function (observer) { return function () { } );
+   *  var res = Rx.Observable.create(function (observer) { return Rx.Disposable.empty; } ); 
+   *  var res = Rx.Observable.create(function (observer) { } ); 
+   *  
+   * @param {Function} subscribe Implementation of the resulting observable sequence's subscribe method, returning a function that will be wrapped in a Disposable.
+   * @returns {Observable} The observable sequence with the specified implementation for the Subscribe method.
    */
-  Observable.fromIterable = function (iterable, scheduler) {
-    scheduler || (scheduler = currentThreadScheduler);
+  Observable.create = Observable.createWithDisposable = function (subscribe) {
+    return new AnonymousObservable(subscribe);
+  };
+
+  /**
+   *  Returns an observable sequence that invokes the specified factory function whenever a new observer subscribes.
+   *  
+   * @example
+   *  var res = Rx.Observable.defer(function () { return Rx.Observable.fromArray([1,2,3]); });    
+   * @param {Function} observableFactory Observable factory function to invoke for each observer that subscribes to the resulting sequence or Promise.
+   * @returns {Observable} An observable sequence whose observers trigger an invocation of the given observable factory function.
+   */
+  var observableDefer = Observable.defer = function (observableFactory) {
     return new AnonymousObservable(function (observer) {
-      var iterator;
+      var result;
       try {
-        iterator = iterable[$iterator$]();
+        result = observableFactory();
       } catch (e) {
-        observer.onError(e);
-        return;
+        return observableThrow(e).subscribe(observer);
       }
+      isPromise(result) && (result = observableFromPromise(result));
+      return result.subscribe(observer);
+    });
+  };
 
-      return scheduler.scheduleRecursive(function (self) {
-        var next;
-        try {
-          next = iterator.next();
-        } catch (err) {
-          observer.onError(err);
-          return;
-        }
-
-        if (next.done) {
-          observer.onCompleted();
-        } else {
-          observer.onNext(next.value);
-          self();
-        }
+  /**
+   *  Returns an empty observable sequence, using the specified scheduler to send out the single OnCompleted message.
+   *  
+   * @example
+   *  var res = Rx.Observable.empty();  
+   *  var res = Rx.Observable.empty(Rx.Scheduler.timeout);  
+   * @param {Scheduler} [scheduler] Scheduler to send the termination call on.
+   * @returns {Observable} An observable sequence with no elements.
+   */
+  var observableEmpty = Observable.empty = function (scheduler) {
+    isScheduler(scheduler) || (scheduler = immediateScheduler);
+    return new AnonymousObservable(function (observer) {
+      return scheduler.schedule(function () {
+        observer.onCompleted();
       });
     });
   };
 
-    /**
-     *  Generates an observable sequence by running a state-driven loop producing the sequence's elements, using the specified scheduler to send out observer messages.
-     *  
-     * @example
-     *  var res = Rx.Observable.generate(0, function (x) { return x < 10; }, function (x) { return x + 1; }, function (x) { return x; });
-     *  var res = Rx.Observable.generate(0, function (x) { return x < 10; }, function (x) { return x + 1; }, function (x) { return x; }, Rx.Scheduler.timeout);
-     * @param {Mixed} initialState Initial state.
-     * @param {Function} condition Condition to terminate generation (upon returning false).
-     * @param {Function} iterate Iteration step function.
-     * @param {Function} resultSelector Selector function for results produced in the sequence.
-     * @param {Scheduler} [scheduler] Scheduler on which to run the generator loop. If not provided, defaults to Scheduler.currentThread.
-     * @returns {Observable} The generated sequence.
-     */
-    Observable.generate = function (initialState, condition, iterate, resultSelector, scheduler) {
-        scheduler || (scheduler = currentThreadScheduler);
-        return new AnonymousObservable(function (observer) {
-            var first = true, state = initialState;
-            return scheduler.scheduleRecursive(function (self) {
-                var hasResult, result;
-                try {
-                    if (first) {
-                        first = false;
-                    } else {
-                        state = iterate(state);
-                    }
-                    hasResult = condition(state);
-                    if (hasResult) {
-                        result = resultSelector(state);
-                    }
-                } catch (exception) {
-                    observer.onError(exception);
-                    return;
-                }
-                if (hasResult) {
-                    observer.onNext(result);
-                    self();
-                } else {
-                    observer.onCompleted();
-                }
-            });
-        });
-    };
+  var maxSafeInteger = Math.pow(2, 53) - 1;
+
+  function numberIsFinite(value) {
+    return typeof value === 'number' && root.isFinite(value);
+  }
+
+  function isNan(n) {
+    return n !== n;
+  }
+
+  function isIterable(o) {
+    return o[$iterator$] !== undefined;
+  }
+
+  function sign(value) {
+    var number = +value;
+    if (number === 0) { return number; }
+    if (isNaN(number)) { return number; }
+    return number < 0 ? -1 : 1;
+  }
+
+  function toLength(o) {
+    var len = +o.length;
+    if (isNaN(len)) { return 0; }
+    if (len === 0 || !numberIsFinite(len)) { return len; }
+    len = sign(len) * Math.floor(Math.abs(len));        
+    if (len <= 0) { return 0; }
+    if (len > maxSafeInteger) { return maxSafeInteger; }
+    return len;
+  }
+
+  function isCallable(f) {
+    return Object.prototype.toString.call(f) === '[object Function]' && typeof f === 'function';
+  }
+
+  /**
+   * This method creates a new Observable sequence from an array-like or iterable object.
+   * @param {Any} arrayLike An array-like or iterable object to convert to an Observable sequence.
+   * @param {Function} [mapFn] Map function to call on every element of the array.
+   * @param {Any} [thisArg] The context to use calling the mapFn if provided.
+   * @param {Scheduler} [scheduler] Optional scheduler to use for scheduling.  If not provided, defaults to Scheduler.currentThread.
+   */
+  Observable.from = function (iterable, mapFn, thisArg, scheduler) {
+    if (iterable == null) {
+      throw new Error('iterable cannot be null.')
+    }
+    if (mapFn && !isCallable(mapFn)) {
+      throw new Error('mapFn when provided must be a function');
+    }
+    isScheduler(scheduler) || (scheduler = currentThreadScheduler);
+    return new AnonymousObservable(function (observer) {
+      var list = Object(iterable),
+        objIsIterable = isIterable(list),
+        len = objIsIterable ? 0 : toLength(list),
+        it = objIsIterable ? list[$iterator$]() : null,
+        i = 0;
+      return scheduler.scheduleRecursive(function (self) {
+        if (i < len || objIsIterable) {
+          var result;
+          if (objIsIterable) {
+            var next = it.next();
+            if (next.done) {
+              observer.onCompleted();
+              return;
+            }
+
+            result = next.value;
+          } else {
+            result = list[i];
+          }
+
+          if (mapFn && isCallable(mapFn)) {
+            try {
+              result = thisArg ? mapFn.call(thisArg, result, i) : mapFn(result, i);
+            } catch (e) {
+              observer.onError(e);
+              return;
+            }            
+          }
+
+          observer.onNext(result);
+          i++;
+          self();
+        } else {
+          observer.onCompleted();
+        }
+      });
+    });
+  };
+  /**
+   *  Converts an array to an observable sequence, using an optional scheduler to enumerate the array.
+   *  
+   * @example
+   *  var res = Rx.Observable.fromArray([1,2,3]);
+   *  var res = Rx.Observable.fromArray([1,2,3], Rx.Scheduler.timeout);
+   * @param {Scheduler} [scheduler] Scheduler to run the enumeration of the input sequence on.
+   * @returns {Observable} The observable sequence whose elements are pulled from the given enumerable sequence.
+   */
+  var observableFromArray = Observable.fromArray = function (array, scheduler) {
+    isScheduler(scheduler) || (scheduler = currentThreadScheduler);
+    return new AnonymousObservable(function (observer) {
+      var count = 0, len = array.length;
+      return scheduler.scheduleRecursive(function (self) {
+        if (count < len) {
+          observer.onNext(array[count++]);
+          self();
+        } else {
+          observer.onCompleted();
+        }
+      });
+    });
+  };
 
     /**
      *  Returns a non-terminating observable sequence, which can be used to denote an infinite duration (e.g. when using reactive joins).
@@ -2159,127 +2125,151 @@
         });
     };
 
-    /**
-     *  Generates an observable sequence of integral numbers within a specified range, using the specified scheduler to send out observer messages.
-     *  
-     * @example
-     *  var res = Rx.Observable.range(0, 10);
-     *  var res = Rx.Observable.range(0, 10, Rx.Scheduler.timeout);
-     * @param {Number} start The value of the first integer in the sequence.
-     * @param {Number} count The number of sequential integers to generate.
-     * @param {Scheduler} [scheduler] Scheduler to run the generator loop on. If not specified, defaults to Scheduler.currentThread.
-     * @returns {Observable} An observable sequence that contains a range of sequential integral numbers.
-     */
-    Observable.range = function (start, count, scheduler) {
-        scheduler || (scheduler = currentThreadScheduler);
-        return new AnonymousObservable(function (observer) {
-            return scheduler.scheduleRecursiveWithState(0, function (i, self) {
-                if (i < count) {
-                    observer.onNext(start + i);
-                    self(i + 1);
-                } else {
-                    observer.onCompleted();
-                }
-            });
-        });
-    };
+  /**
+   *  This method creates a new Observable instance with a variable number of arguments, regardless of number or type of the arguments.
+   * @example
+   *  var res = Rx.Observable.of(1,2,3);
+   * @returns {Observable} The observable sequence whose elements are pulled from the given arguments.
+   */
+  Observable.of = function () {
+    var len = arguments.length, args = new Array(len);
+    for(var i = 0; i < len; i++) { args[i] = arguments[i]; }
+    return observableFromArray(args);
+  };
 
-    /**
-     *  Generates an observable sequence that repeats the given element the specified number of times, using the specified scheduler to send out observer messages.
-     *  
-     * @example
-     *  var res = Rx.Observable.repeat(42);
-     *  var res = Rx.Observable.repeat(42, 4);
-     *  3 - res = Rx.Observable.repeat(42, 4, Rx.Scheduler.timeout);
-     *  4 - res = Rx.Observable.repeat(42, null, Rx.Scheduler.timeout);
-     * @param {Mixed} value Element to repeat.
-     * @param {Number} repeatCount [Optiona] Number of times to repeat the element. If not specified, repeats indefinitely.
-     * @param {Scheduler} scheduler Scheduler to run the producer loop on. If not specified, defaults to Scheduler.immediate.
-     * @returns {Observable} An observable sequence that repeats the given element the specified number of times.
-     */
-    Observable.repeat = function (value, repeatCount, scheduler) {
-        scheduler || (scheduler = currentThreadScheduler);
-        if (repeatCount == null) {
-            repeatCount = -1;
+  /**
+   *  This method creates a new Observable instance with a variable number of arguments, regardless of number or type of the arguments. 
+   * @example
+   *  var res = Rx.Observable.of(1,2,3);
+   * @param {Scheduler} scheduler A scheduler to use for scheduling the arguments.
+   * @returns {Observable} The observable sequence whose elements are pulled from the given arguments.
+   */
+  var observableOf = Observable.ofWithScheduler = function (scheduler) {
+    var len = arguments.length - 1, args = new Array(len);
+    for(var i = 0; i < len; i++) { args[i] = arguments[i + 1]; }
+    return observableFromArray(args, scheduler);
+  };
+
+  /**
+   *  Generates an observable sequence of integral numbers within a specified range, using the specified scheduler to send out observer messages.
+   *  
+   * @example
+   *  var res = Rx.Observable.range(0, 10);
+   *  var res = Rx.Observable.range(0, 10, Rx.Scheduler.timeout);
+   * @param {Number} start The value of the first integer in the sequence.
+   * @param {Number} count The number of sequential integers to generate.
+   * @param {Scheduler} [scheduler] Scheduler to run the generator loop on. If not specified, defaults to Scheduler.currentThread.
+   * @returns {Observable} An observable sequence that contains a range of sequential integral numbers.
+   */
+  Observable.range = function (start, count, scheduler) {
+    isScheduler(scheduler) || (scheduler = currentThreadScheduler);
+    return new AnonymousObservable(function (observer) {
+      return scheduler.scheduleRecursiveWithState(0, function (i, self) {
+        if (i < count) {
+          observer.onNext(start + i);
+          self(i + 1);
+        } else {
+          observer.onCompleted();
         }
-        return observableReturn(value, scheduler).repeat(repeatCount);
-    };
+      });
+    });
+  };
 
-    /**
-     *  Returns an observable sequence that contains a single element, using the specified scheduler to send out observer messages.
-     *  There is an alias called 'returnValue' for browsers <IE9.
-     *  
-     * @example
-     *  var res = Rx.Observable.return(42);
-     *  var res = Rx.Observable.return(42, Rx.Scheduler.timeout);
-     * @param {Mixed} value Single element in the resulting observable sequence.
-     * @param {Scheduler} scheduler Scheduler to send the single element on. If not specified, defaults to Scheduler.immediate.
-     * @returns {Observable} An observable sequence containing the single specified element.
-     */
-    var observableReturn = Observable['return'] = Observable.returnValue = function (value, scheduler) {
-        scheduler || (scheduler = immediateScheduler);
-        return new AnonymousObservable(function (observer) {
-            return scheduler.schedule(function () {
-                observer.onNext(value);
-                observer.onCompleted();
-            });
-        });
-    };
+  /**
+   *  Generates an observable sequence that repeats the given element the specified number of times, using the specified scheduler to send out observer messages.
+   *  
+   * @example
+   *  var res = Rx.Observable.repeat(42);
+   *  var res = Rx.Observable.repeat(42, 4);
+   *  3 - res = Rx.Observable.repeat(42, 4, Rx.Scheduler.timeout);
+   *  4 - res = Rx.Observable.repeat(42, null, Rx.Scheduler.timeout);
+   * @param {Mixed} value Element to repeat.
+   * @param {Number} repeatCount [Optiona] Number of times to repeat the element. If not specified, repeats indefinitely.
+   * @param {Scheduler} scheduler Scheduler to run the producer loop on. If not specified, defaults to Scheduler.immediate.
+   * @returns {Observable} An observable sequence that repeats the given element the specified number of times.
+   */
+  Observable.repeat = function (value, repeatCount, scheduler) {
+    isScheduler(scheduler) || (scheduler = currentThreadScheduler);
+    return observableReturn(value, scheduler).repeat(repeatCount == null ? -1 : repeatCount);
+  };
 
-    /**
-     *  Returns an observable sequence that terminates with an exception, using the specified scheduler to send out the single onError message.
-     *  There is an alias to this method called 'throwException' for browsers <IE9.
-     *  
-     * @example
-     *  var res = Rx.Observable.throwException(new Error('Error'));
-     *  var res = Rx.Observable.throwException(new Error('Error'), Rx.Scheduler.timeout);
-     * @param {Mixed} exception An object used for the sequence's termination.
-     * @param {Scheduler} scheduler Scheduler to send the exceptional termination call on. If not specified, defaults to Scheduler.immediate.
-     * @returns {Observable} The observable sequence that terminates exceptionally with the specified exception object.
-     */
-    var observableThrow = Observable['throw'] = Observable.throwException = function (exception, scheduler) {
-        scheduler || (scheduler = immediateScheduler);
-        return new AnonymousObservable(function (observer) {
-            return scheduler.schedule(function () {
-                observer.onError(exception);
-            });
-        });
-    };
+  /**
+   *  Returns an observable sequence that contains a single element, using the specified scheduler to send out observer messages.
+   *  There is an alias called 'just', and 'returnValue' for browsers <IE9.
+   *  
+   * @example
+   *  var res = Rx.Observable.return(42);
+   *  var res = Rx.Observable.return(42, Rx.Scheduler.timeout);
+   * @param {Mixed} value Single element in the resulting observable sequence.
+   * @param {Scheduler} scheduler Scheduler to send the single element on. If not specified, defaults to Scheduler.immediate.
+   * @returns {Observable} An observable sequence containing the single specified element.
+   */
+  var observableReturn = Observable['return'] = Observable.returnValue = Observable.just = function (value, scheduler) {
+    isScheduler(scheduler) || (scheduler = immediateScheduler);
+    return new AnonymousObservable(function (observer) {
+      return scheduler.schedule(function () {
+        observer.onNext(value);
+        observer.onCompleted();
+      });
+    });
+  };
 
-    function observableCatchHandler(source, handler) {
-        return new AnonymousObservable(function (observer) {
-            var d1 = new SingleAssignmentDisposable(), subscription = new SerialDisposable();
-            subscription.setDisposable(d1);
-            d1.setDisposable(source.subscribe(observer.onNext.bind(observer), function (exception) {
-                var d, result;
-                try {
-                    result = handler(exception);
-                } catch (ex) {
-                    observer.onError(ex);
-                    return;
-                }
-                d = new SingleAssignmentDisposable();
-                subscription.setDisposable(d);
-                d.setDisposable(result.subscribe(observer));
-            }, observer.onCompleted.bind(observer)));
-            return subscription;
-        });
-    }
+  /**
+   *  Returns an observable sequence that terminates with an exception, using the specified scheduler to send out the single onError message.
+   *  There is an alias to this method called 'throwException' for browsers <IE9.
+   *  
+   * @example
+   *  var res = Rx.Observable.throw(new Error('Error'));
+   *  var res = Rx.Observable.throw(new Error('Error'), Rx.Scheduler.timeout);
+   * @param {Mixed} exception An object used for the sequence's termination.
+   * @param {Scheduler} scheduler Scheduler to send the exceptional termination call on. If not specified, defaults to Scheduler.immediate.
+   * @returns {Observable} The observable sequence that terminates exceptionally with the specified exception object.
+   */
+  var observableThrow = Observable['throw'] = Observable.throwException = function (exception, scheduler) {
+    isScheduler(scheduler) || (scheduler = immediateScheduler);
+    return new AnonymousObservable(function (observer) {
+      return scheduler.schedule(function () {
+        observer.onError(exception);
+      });
+    });
+  };
 
-    /**
-     * Continues an observable sequence that is terminated by an exception with the next observable sequence.
-     * @example
-     * 1 - xs.catchException(ys)
-     * 2 - xs.catchException(function (ex) { return ys(ex); })
-     * @param {Mixed} handlerOrSecond Exception handler function that returns an observable sequence given the error that occurred in the first sequence, or a second observable sequence used to produce results when an error occurred in the first sequence.
-     * @returns {Observable} An observable sequence containing the first sequence's elements, followed by the elements of the handler sequence in case an exception occurred.
-     */      
-    observableProto['catch'] = observableProto.catchException = function (handlerOrSecond) {
-        if (typeof handlerOrSecond === 'function') {
-            return observableCatchHandler(this, handlerOrSecond);
+  function observableCatchHandler(source, handler) {
+    return new AnonymousObservable(function (observer) {
+      var d1 = new SingleAssignmentDisposable(), subscription = new SerialDisposable();
+      subscription.setDisposable(d1);
+      d1.setDisposable(source.subscribe(observer.onNext.bind(observer), function (exception) {
+        var d, result;
+        try {
+          result = handler(exception);
+        } catch (ex) {
+          observer.onError(ex);
+          return;
         }
-        return observableCatch([this, handlerOrSecond]);
-    };
+        isPromise(result) && (result = observableFromPromise(result));
+
+        d = new SingleAssignmentDisposable();
+        subscription.setDisposable(d);
+        d.setDisposable(result.subscribe(observer));
+      }, observer.onCompleted.bind(observer)));
+      
+      return subscription;
+    });
+  }
+
+  /**
+   * Continues an observable sequence that is terminated by an exception with the next observable sequence.
+   * @example
+   * 1 - xs.catchException(ys)
+   * 2 - xs.catchException(function (ex) { return ys(ex); })
+   * @param {Mixed} handlerOrSecond Exception handler function that returns an observable sequence given the error that occurred in the first sequence, or a second observable sequence used to produce results when an error occurred in the first sequence.
+   * @returns {Observable} An observable sequence containing the first sequence's elements, followed by the elements of the handler sequence in case an exception occurred.
+   */      
+  observableProto['catch'] = observableProto.catchException = function (handlerOrSecond) {
+    return typeof handlerOrSecond === 'function' ?
+      observableCatchHandler(this, handlerOrSecond) :
+      observableCatch([this, handlerOrSecond]);
+  };
 
     /**
      * Continues an observable sequence that is terminated by an exception with the next observable sequence.
@@ -2294,87 +2284,89 @@
         return enumerableFor(items).catchException();
     };
 
-    /**
-     * Merges the specified observable sequences into one observable sequence by using the selector function whenever any of the observable sequences produces an element.
-     * This can be in the form of an argument list of observables or an array.
-     *
-     * @example
-     * 1 - obs = observable.combineLatest(obs1, obs2, obs3, function (o1, o2, o3) { return o1 + o2 + o3; });
-     * 2 - obs = observable.combineLatest([obs1, obs2, obs3], function (o1, o2, o3) { return o1 + o2 + o3; });
-     * @returns {Observable} An observable sequence containing the result of combining elements of the sources using the specified result selector function. 
-     */
-    observableProto.combineLatest = function () {
-        var args = slice.call(arguments);
-        if (Array.isArray(args[0])) {
-            args[0].unshift(this);
-        } else {
-            args.unshift(this);
+  /**
+   * Merges the specified observable sequences into one observable sequence by using the selector function whenever any of the observable sequences or Promises produces an element.
+   * This can be in the form of an argument list of observables or an array.
+   *
+   * @example
+   * 1 - obs = observable.combineLatest(obs1, obs2, obs3, function (o1, o2, o3) { return o1 + o2 + o3; });
+   * 2 - obs = observable.combineLatest([obs1, obs2, obs3], function (o1, o2, o3) { return o1 + o2 + o3; });
+   * @returns {Observable} An observable sequence containing the result of combining elements of the sources using the specified result selector function. 
+   */
+  observableProto.combineLatest = function () {
+    var args = slice.call(arguments);
+    if (Array.isArray(args[0])) {
+      args[0].unshift(this);
+    } else {
+      args.unshift(this);
+    }
+    return combineLatest.apply(this, args);
+  };
+
+  /**
+   * Merges the specified observable sequences into one observable sequence by using the selector function whenever any of the observable sequences or Promises produces an element.
+   * 
+   * @example
+   * 1 - obs = Rx.Observable.combineLatest(obs1, obs2, obs3, function (o1, o2, o3) { return o1 + o2 + o3; });
+   * 2 - obs = Rx.Observable.combineLatest([obs1, obs2, obs3], function (o1, o2, o3) { return o1 + o2 + o3; });     
+   * @returns {Observable} An observable sequence containing the result of combining elements of the sources using the specified result selector function.
+   */
+  var combineLatest = Observable.combineLatest = function () {
+    var args = slice.call(arguments), resultSelector = args.pop();
+    
+    if (Array.isArray(args[0])) {
+      args = args[0];
+    }
+
+    return new AnonymousObservable(function (observer) {
+      var falseFactory = function () { return false; },
+        n = args.length,
+        hasValue = arrayInitialize(n, falseFactory),
+        hasValueAll = false,
+        isDone = arrayInitialize(n, falseFactory),
+        values = new Array(n);
+
+      function next(i) {
+        var res;
+        hasValue[i] = true;
+        if (hasValueAll || (hasValueAll = hasValue.every(identity))) {
+          try {
+            res = resultSelector.apply(null, values);
+          } catch (ex) {
+            observer.onError(ex);
+            return;
+          }
+          observer.onNext(res);
+        } else if (isDone.filter(function (x, j) { return j !== i; }).every(identity)) {
+          observer.onCompleted();
         }
-        return combineLatest.apply(this, args);
-    };
+      }
 
-    /**
-     * Merges the specified observable sequences into one observable sequence by using the selector function whenever any of the observable sequences produces an element.
-     * 
-     * @example
-     * 1 - obs = Rx.Observable.combineLatest(obs1, obs2, obs3, function (o1, o2, o3) { return o1 + o2 + o3; });
-     * 2 - obs = Rx.Observable.combineLatest([obs1, obs2, obs3], function (o1, o2, o3) { return o1 + o2 + o3; });     
-     * @returns {Observable} An observable sequence containing the result of combining elements of the sources using the specified result selector function.
-     */
-    var combineLatest = Observable.combineLatest = function () {
-        var args = slice.call(arguments), resultSelector = args.pop();
-        
-        if (Array.isArray(args[0])) {
-            args = args[0];
+      function done (i) {
+        isDone[i] = true;
+        if (isDone.every(identity)) {
+          observer.onCompleted();
         }
+      }
 
-        return new AnonymousObservable(function (observer) {
-            var falseFactory = function () { return false; },
-                n = args.length,
-                hasValue = arrayInitialize(n, falseFactory),
-                hasValueAll = false,
-                isDone = arrayInitialize(n, falseFactory),
-                values = new Array(n);
+      var subscriptions = new Array(n);
+      for (var idx = 0; idx < n; idx++) {
+        (function (i) {
+          var source = args[i], sad = new SingleAssignmentDisposable();
+          isPromise(source) && (source = observableFromPromise(source));
+          sad.setDisposable(source.subscribe(function (x) {
+            values[i] = x;
+            next(i);
+          }, observer.onError.bind(observer), function () {
+            done(i);
+          }));
+          subscriptions[i] = sad;
+        }(idx));
+      }
 
-            function next(i) {
-                var res;
-                hasValue[i] = true;
-                if (hasValueAll || (hasValueAll = hasValue.every(identity))) {
-                    try {
-                        res = resultSelector.apply(null, values);
-                    } catch (ex) {
-                        observer.onError(ex);
-                        return;
-                    }
-                    observer.onNext(res);
-                } else if (isDone.filter(function (x, j) { return j !== i; }).every(identity)) {
-                    observer.onCompleted();
-                }
-            }
-
-            function done (i) {
-                isDone[i] = true;
-                if (isDone.every(identity)) {
-                    observer.onCompleted();
-                }
-            }
-
-            var subscriptions = new Array(n);
-            for (var idx = 0; idx < n; idx++) {
-                (function (i) {
-                    subscriptions[i] = new SingleAssignmentDisposable();
-                    subscriptions[i].setDisposable(args[i].subscribe(function (x) {
-                        values[i] = x;
-                        next(i);
-                    }, observer.onError.bind(observer), function () {
-                        done(i);
-                    }));
-                }(idx));
-            }
-
-            return new CompositeDisposable(subscriptions);
-        });
-    };
+      return new CompositeDisposable(subscriptions);
+    });
+  };
 
     /**
      * Concatenates all the observable sequences.  This takes in either an array or variable arguments to concatenate.
@@ -2533,37 +2525,35 @@
     });
   };
 
-    /**
-     * Returns the values from the source observable sequence only after the other observable sequence produces a value.
-     * @param {Observable} other The observable sequence that triggers propagation of elements of the source sequence.
-     * @returns {Observable} An observable sequence containing the elements of the source sequence starting from the point the other sequence triggered propagation.    
-     */
-    observableProto.skipUntil = function (other) {
-        var source = this;
-        return new AnonymousObservable(function (observer) {
-            var isOpen = false;
-            var disposables = new CompositeDisposable(source.subscribe(function (left) {
-                if (isOpen) {
-                    observer.onNext(left);
-                }
-            }, observer.onError.bind(observer), function () {
-                if (isOpen) {
-                    observer.onCompleted();
-                }
-            }));
+  /**
+   * Returns the values from the source observable sequence only after the other observable sequence produces a value.
+   * @param {Observable | Promise} other The observable sequence or Promise that triggers propagation of elements of the source sequence.
+   * @returns {Observable} An observable sequence containing the elements of the source sequence starting from the point the other sequence triggered propagation.    
+   */
+  observableProto.skipUntil = function (other) {
+    var source = this;
+    return new AnonymousObservable(function (observer) {
+      var isOpen = false;
+      var disposables = new CompositeDisposable(source.subscribe(function (left) {
+        isOpen && observer.onNext(left);
+      }, observer.onError.bind(observer), function () {
+        isOpen && observer.onCompleted();
+      }));
 
-            var rightSubscription = new SingleAssignmentDisposable();
-            disposables.add(rightSubscription);
-            rightSubscription.setDisposable(other.subscribe(function () {
-                isOpen = true;
-                rightSubscription.dispose();
-            }, observer.onError.bind(observer), function () {
-                rightSubscription.dispose();
-            }));
+      isPromise(other) && (other = observableFromPromise(other));
 
-            return disposables;
-        });
-    };
+      var rightSubscription = new SingleAssignmentDisposable();
+      disposables.add(rightSubscription);
+      rightSubscription.setDisposable(other.subscribe(function () {
+        isOpen = true;
+        rightSubscription.dispose();
+      }, observer.onError.bind(observer), function () {
+        rightSubscription.dispose();
+      }));
+
+      return disposables;
+    });
+  };
 
     /**
      * Transforms an observable sequence of observable sequences into an observable sequence producing values only from the most recent observable sequence.
@@ -2612,101 +2602,104 @@
         });
     };
 
-    /**
-     * Returns the values from the source observable sequence until the other observable sequence produces a value.
-     * @param {Observable} other Observable sequence that terminates propagation of elements of the source sequence.
-     * @returns {Observable} An observable sequence containing the elements of the source sequence up to the point the other sequence interrupted further propagation.   
-     */
-    observableProto.takeUntil = function (other) {
-        var source = this;
-        return new AnonymousObservable(function (observer) {
-            return new CompositeDisposable(
-                source.subscribe(observer),
-                other.subscribe(observer.onCompleted.bind(observer), observer.onError.bind(observer), noop)
-            );
-        });
-    };
+  /**
+   * Returns the values from the source observable sequence until the other observable sequence produces a value.
+   * @param {Observable | Promise} other Observable sequence or Promise that terminates propagation of elements of the source sequence.
+   * @returns {Observable} An observable sequence containing the elements of the source sequence up to the point the other sequence interrupted further propagation.   
+   */
+  observableProto.takeUntil = function (other) {
+    var source = this;
+    return new AnonymousObservable(function (observer) {
+      isPromise(other) && (other = observableFromPromise(other));
+      return new CompositeDisposable(
+        source.subscribe(observer),
+        other.subscribe(observer.onCompleted.bind(observer), observer.onError.bind(observer), noop)
+      );
+    });
+  };
 
-    function zipArray(second, resultSelector) {
-        var first = this;
-        return new AnonymousObservable(function (observer) {
-            var index = 0, len = second.length;
-            return first.subscribe(function (left) {
-                if (index < len) {
-                    var right = second[index++], result;
-                    try {
-                        result = resultSelector(left, right);
-                    } catch (e) {
-                        observer.onError(e);
-                        return;
-                    }
-                    observer.onNext(result);
-                } else {
-                    observer.onCompleted();
-                }
-            }, observer.onError.bind(observer), observer.onCompleted.bind(observer));
-        });
-    }    
-
-    /**
-     * Merges the specified observable sequences into one observable sequence by using the selector function whenever all of the observable sequences or an array have produced an element at a corresponding index.
-     * The last element in the arguments must be a function to invoke for each series of elements at corresponding indexes in the sources.
-     *
-     * @example
-     * 1 - res = obs1.zip(obs2, fn);
-     * 1 - res = x1.zip([1,2,3], fn);  
-     * @returns {Observable} An observable sequence containing the result of combining elements of the sources using the specified result selector function. 
-     */   
-    observableProto.zip = function () {
-        if (Array.isArray(arguments[0])) {
-            return zipArray.apply(this, arguments);
+  function zipArray(second, resultSelector) {
+    var first = this;
+    return new AnonymousObservable(function (observer) {
+      var index = 0, len = second.length;
+      return first.subscribe(function (left) {
+        if (index < len) {
+          var right = second[index++], result;
+          try {
+            result = resultSelector(left, right);
+          } catch (e) {
+            observer.onError(e);
+            return;
+          }
+          observer.onNext(result);
+        } else {
+          observer.onCompleted();
         }
-        var parent = this, sources = slice.call(arguments), resultSelector = sources.pop();
-        sources.unshift(parent);
-        return new AnonymousObservable(function (observer) {
-            var n = sources.length,
-              queues = arrayInitialize(n, function () { return []; }),
-              isDone = arrayInitialize(n, function () { return false; });
-              
-            var next = function (i) {
-                var res, queuedValues;
-                if (queues.every(function (x) { return x.length > 0; })) {
-                    try {
-                        queuedValues = queues.map(function (x) { return x.shift(); });
-                        res = resultSelector.apply(parent, queuedValues);
-                    } catch (ex) {
-                        observer.onError(ex);
-                        return;
-                    }
-                    observer.onNext(res);
-                } else if (isDone.filter(function (x, j) { return j !== i; }).every(identity)) {
-                    observer.onCompleted();
-                }
-            };
+      }, observer.onError.bind(observer), observer.onCompleted.bind(observer));
+    });
+  }    
 
-            function done(i) {
-                isDone[i] = true;
-                if (isDone.every(function (x) { return x; })) {
-                    observer.onCompleted();
-                }
-            }
+  /**
+   * Merges the specified observable sequences into one observable sequence by using the selector function whenever all of the observable sequences or an array have produced an element at a corresponding index.
+   * The last element in the arguments must be a function to invoke for each series of elements at corresponding indexes in the sources.
+   *
+   * @example
+   * 1 - res = obs1.zip(obs2, fn);
+   * 1 - res = x1.zip([1,2,3], fn);  
+   * @returns {Observable} An observable sequence containing the result of combining elements of the sources using the specified result selector function. 
+   */   
+  observableProto.zip = function () {
+    if (Array.isArray(arguments[0])) {
+      return zipArray.apply(this, arguments);
+    }
+    var parent = this, sources = slice.call(arguments), resultSelector = sources.pop();
+    sources.unshift(parent);
+    return new AnonymousObservable(function (observer) {
+      var n = sources.length,
+        queues = arrayInitialize(n, function () { return []; }),
+        isDone = arrayInitialize(n, function () { return false; });
+        
+      function next(i) {
+        var res, queuedValues;
+        if (queues.every(function (x) { return x.length > 0; })) {
+          try {
+            queuedValues = queues.map(function (x) { return x.shift(); });
+            res = resultSelector.apply(parent, queuedValues);
+          } catch (ex) {
+            observer.onError(ex);
+            return;
+          }
+          observer.onNext(res);
+        } else if (isDone.filter(function (x, j) { return j !== i; }).every(identity)) {
+          observer.onCompleted();
+        }
+      };
 
-            var subscriptions = new Array(n);
-            for (var idx = 0; idx < n; idx++) {
-                (function (i) {
-                    subscriptions[i] = new SingleAssignmentDisposable();
-                    subscriptions[i].setDisposable(sources[i].subscribe(function (x) {
-                        queues[i].push(x);
-                        next(i);
-                    }, observer.onError.bind(observer), function () {
-                        done(i);
-                    }));
-                })(idx);
-            }
+      function done(i) {
+        isDone[i] = true;
+        if (isDone.every(function (x) { return x; })) {
+          observer.onCompleted();
+        }
+      }
 
-            return new CompositeDisposable(subscriptions);
-        });
-    };
+      var subscriptions = new Array(n);
+      for (var idx = 0; idx < n; idx++) {
+        (function (i) {
+          var source = sources[i], sad = new SingleAssignmentDisposable();
+          isPromise(source) && (source = observableFromPromise(source));
+          sad.setDisposable(source.subscribe(function (x) {
+            queues[i].push(x);
+            next(i);
+          }, observer.onError.bind(observer), function () {
+            done(i);
+          }));
+          subscriptions[i] = sad;
+        })(idx);
+      }
+
+      return new CompositeDisposable(subscriptions);
+    });
+  };
     /**
      * Merges the specified observable sequences into one observable sequence by using the selector function whenever all of the observable sequences have produced an element at a corresponding index.
      * @param arguments Observable sources.
@@ -2838,86 +2831,92 @@
         });
     };
 
-    /**
-     *  Invokes an action for each element in the observable sequence and invokes an action upon graceful or exceptional termination of the observable sequence.
-     *  This method can be used for debugging, logging, etc. of query behavior by intercepting the message stream to run arbitrary actions for messages on the pipeline.
-     *  
-     * @example
-     *  var res = observable.doAction(observer);
-     *  var res = observable.doAction(onNext);
-     *  var res = observable.doAction(onNext, onError);
-     *  var res = observable.doAction(onNext, onError, onCompleted);
-     * @param {Mixed} observerOrOnNext Action to invoke for each element in the observable sequence or an observer.
-     * @param {Function} [onError]  Action to invoke upon exceptional termination of the observable sequence. Used if only the observerOrOnNext parameter is also a function.
-     * @param {Function} [onCompleted]  Action to invoke upon graceful termination of the observable sequence. Used if only the observerOrOnNext parameter is also a function.
-     * @returns {Observable} The source sequence with the side-effecting behavior applied.   
-     */
-    observableProto['do'] = observableProto.doAction = function (observerOrOnNext, onError, onCompleted) {
-        var source = this, onNextFunc;
-        if (typeof observerOrOnNext === 'function') {
-            onNextFunc = observerOrOnNext;
-        } else {
-            onNextFunc = observerOrOnNext.onNext.bind(observerOrOnNext);
-            onError = observerOrOnNext.onError.bind(observerOrOnNext);
-            onCompleted = observerOrOnNext.onCompleted.bind(observerOrOnNext);
+  /**
+   *  Invokes an action for each element in the observable sequence and invokes an action upon graceful or exceptional termination of the observable sequence.
+   *  This method can be used for debugging, logging, etc. of query behavior by intercepting the message stream to run arbitrary actions for messages on the pipeline.
+   *  
+   * @example
+   *  var res = observable.do(observer);
+   *  var res = observable.do(onNext);
+   *  var res = observable.do(onNext, onError);
+   *  var res = observable.do(onNext, onError, onCompleted);
+   * @param {Function | Observer} observerOrOnNext Action to invoke for each element in the observable sequence or an observer.
+   * @param {Function} [onError]  Action to invoke upon exceptional termination of the observable sequence. Used if only the observerOrOnNext parameter is also a function.
+   * @param {Function} [onCompleted]  Action to invoke upon graceful termination of the observable sequence. Used if only the observerOrOnNext parameter is also a function.
+   * @returns {Observable} The source sequence with the side-effecting behavior applied.   
+   */
+  observableProto['do'] = observableProto.doAction = observableProto.tap = function (observerOrOnNext, onError, onCompleted) {
+    var source = this, onNextFunc;
+    if (typeof observerOrOnNext === 'function') {
+      onNextFunc = observerOrOnNext;
+    } else {
+      onNextFunc = observerOrOnNext.onNext.bind(observerOrOnNext);
+      onError = observerOrOnNext.onError.bind(observerOrOnNext);
+      onCompleted = observerOrOnNext.onCompleted.bind(observerOrOnNext);
+    }
+    return new AnonymousObservable(function (observer) {
+      return source.subscribe(function (x) {
+        try {
+          onNextFunc(x);
+        } catch (e) {
+          observer.onError(e);
         }
-        return new AnonymousObservable(function (observer) {
-            return source.subscribe(function (x) {
-                try {
-                    onNextFunc(x);
-                } catch (e) {
-                    observer.onError(e);
-                }
-                observer.onNext(x);
-            }, function (exception) {
-                if (!onError) {
-                    observer.onError(exception);
-                } else {
-                    try {
-                        onError(exception);
-                    } catch (e) {
-                        observer.onError(e);
-                    }
-                    observer.onError(exception);
-                }
-            }, function () {
-                if (!onCompleted) {
-                    observer.onCompleted();
-                } else {
-                    try {
-                        onCompleted();
-                    } catch (e) {
-                        observer.onError(e);
-                    }
-                    observer.onCompleted();
-                }
-            });
-        });
-    };
+        observer.onNext(x);
+      }, function (err) {
+        if (!onError) {
+          observer.onError(err);
+        } else {
+          try {
+            onError(err);
+          } catch (e) {
+            observer.onError(e);
+          }
+          observer.onError(err);
+        }
+      }, function () {
+        if (!onCompleted) {
+          observer.onCompleted();
+        } else {
+          try {
+            onCompleted();
+          } catch (e) {
+            observer.onError(e);
+          }
+          observer.onCompleted();
+        }
+      });
+    });
+  };
 
-    /**
-     *  Invokes a specified action after the source observable sequence terminates gracefully or exceptionally.
-     *  
-     * @example
-     *  var res = observable.finallyAction(function () { console.log('sequence ended'; });
-     * @param {Function} finallyAction Action to invoke after the source observable sequence terminates.
-     * @returns {Observable} Source sequence with the action-invoking termination behavior applied. 
-     */  
-    observableProto['finally'] = observableProto.finallyAction = function (action) {
-        var source = this;
-        return new AnonymousObservable(function (observer) {
-            var subscription = source.subscribe(observer);
-            return disposableCreate(function () {
-                try {
-                    subscription.dispose();
-                } catch (e) { 
-                    throw e;                    
-                } finally {
-                    action();
-                }
-            });
-        });
-    };
+  /**
+   *  Invokes a specified action after the source observable sequence terminates gracefully or exceptionally.
+   *  
+   * @example
+   *  var res = observable.finallyAction(function () { console.log('sequence ended'; });
+   * @param {Function} finallyAction Action to invoke after the source observable sequence terminates.
+   * @returns {Observable} Source sequence with the action-invoking termination behavior applied. 
+   */  
+  observableProto['finally'] = observableProto.finallyAction = function (action) {
+    var source = this;
+    return new AnonymousObservable(function (observer) {
+      var subscription;
+      try {
+        subscription = source.subscribe(observer);
+      } catch (e) {
+        action();
+        throw e;
+      }
+      return disposableCreate(function () {
+        try {
+          subscription.dispose();
+        } catch (e) { 
+          throw e;                    
+        } finally {
+          action();
+        }
+      });
+    });
+  };
 
     /**
      *  Ignores all elements in an observable sequence leaving only the termination messages.
@@ -2962,18 +2961,19 @@
         return enumerableRepeat(this, repeatCount).concat();
     };
 
-    /**
-     *  Repeats the source observable sequence the specified number of times or until it successfully terminates. If the retry count is not specified, it retries indefinitely.
-     *  
-     * @example
-     *  var res = retried = retry.repeat();
-     *  var res = retried = retry.repeat(42);
-     * @param {Number} [retryCount]  Number of times to retry the sequence. If not provided, retry the sequence indefinitely.
-     * @returns {Observable} An observable sequence producing the elements of the given sequence repeatedly until it terminates successfully. 
-     */
-    observableProto.retry = function (retryCount) {
-        return enumerableRepeat(this, retryCount).catchException();
-    };
+  /**
+   *  Repeats the source observable sequence the specified number of times or until it successfully terminates. If the retry count is not specified, it retries indefinitely.
+   *  Note if you encounter an error and want it to retry once, then you must use .retry(2);
+   *  
+   * @example
+   *  var res = retried = retry.repeat();
+   *  var res = retried = retry.repeat(2);
+   * @param {Number} [retryCount]  Number of times to retry the sequence. If not provided, retry the sequence indefinitely.
+   * @returns {Observable} An observable sequence producing the elements of the given sequence repeatedly until it terminates successfully. 
+   */
+  observableProto.retry = function (retryCount) {
+    return enumerableRepeat(this, retryCount).catchException();
+  };
 
     /**
      *  Applies an accumulator function over an observable sequence and returns each intermediate result. The optional seed value is used as the initial accumulator value.
@@ -3069,47 +3069,72 @@
         return enumerableFor([observableFromArray(values, scheduler), this]).concat();
     };
 
-    /**
-     *  Returns a specified number of contiguous elements from the end of an observable sequence, using an optional scheduler to drain the queue.
-     *  
-     * @example
-     *  var res = source.takeLast(5);
-     *  var res = source.takeLast(5, Rx.Scheduler.timeout);
-     *  
-     * @description
-     *  This operator accumulates a buffer with a length enough to store elements count elements. Upon completion of
-     *  the source sequence, this buffer is drained on the result sequence. This causes the elements to be delayed.
-     * @param {Number} count Number of elements to take from the end of the source sequence.
-     * @param {Scheduler} [scheduler] Scheduler used to drain the queue upon completion of the source sequence.
-     * @returns {Observable} An observable sequence containing the specified number of elements from the end of the source sequence.
-     */   
-    observableProto.takeLast = function (count, scheduler) {
-        return this.takeLastBuffer(count).selectMany(function (xs) { return observableFromArray(xs, scheduler); });
-    };
+  /**
+   *  Returns a specified number of contiguous elements from the end of an observable sequence.
+   *  
+   * @example
+   *  var res = source.takeLast(5);
+   *  
+   * @description
+   *  This operator accumulates a buffer with a length enough to store elements count elements. Upon completion of
+   *  the source sequence, this buffer is drained on the result sequence. This causes the elements to be delayed.
+   * @param {Number} count Number of elements to take from the end of the source sequence.
+   * @returns {Observable} An observable sequence containing the specified number of elements from the end of the source sequence.
+   */   
+  observableProto.takeLast = function (count) {
+    var source = this;
+    return new AnonymousObservable(function (observer) {
+      var q = [];
+      return source.subscribe(function (x) {
+        q.push(x);
+        q.length > count && q.shift();
+      }, observer.onError.bind(observer), function () {
+        while(q.length > 0) { observer.onNext(q.shift()); }
+        observer.onCompleted();
+      });
+    });
+  };
+
+    function concatMap(source, selector, thisArg) {
+      return source.map(function (x, i) {
+        var result = selector.call(thisArg, x, i);
+        return isPromise(result) ? observableFromPromise(result) : result;
+      }).concatAll();
+    }
 
     /**
-     *  Returns an array with the specified number of contiguous elements from the end of an observable sequence.
+     *  One of the Following:
+     *  Projects each element of an observable sequence to an observable sequence and merges the resulting observable sequences into one observable sequence.
      *  
-     * @description
-     *  This operator accumulates a buffer with a length enough to store count elements. Upon completion of the
-     *  source sequence, this buffer is produced on the result sequence.       
-     * @param {Number} count Number of elements to take from the end of the source sequence.
-     * @returns {Observable} An observable sequence containing a single array with the specified number of elements from the end of the source sequence.
+     * @example
+     *  var res = source.concatMap(function (x) { return Rx.Observable.range(0, x); });
+     *  Or:
+     *  Projects each element of an observable sequence to an observable sequence, invokes the result selector for the source element and each of the corresponding inner sequence's elements, and merges the results into one observable sequence.
+     *  
+     *  var res = source.concatMap(function (x) { return Rx.Observable.range(0, x); }, function (x, y) { return x + y; });
+     *  Or:
+     *  Projects each element of the source observable sequence to the other observable sequence and merges the resulting observable sequences into one observable sequence.
+     *  
+     *  var res = source.concatMap(Rx.Observable.fromArray([1,2,3]));
+     * @param selector A transform function to apply to each element or an observable sequence to project each element from the 
+     * source sequence onto which could be either an observable or Promise.
+     * @param {Function} [resultSelector]  A transform function to apply to each element of the intermediate sequence.
+     * @returns {Observable} An observable sequence whose elements are the result of invoking the one-to-many transform function collectionSelector on each element of the input sequence and then mapping each of those sequence elements and their corresponding source element to a result element.   
      */
-    observableProto.takeLastBuffer = function (count) {
-        var source = this;
-        return new AnonymousObservable(function (observer) {
-            var q = [];
-            return source.subscribe(function (x) {
-                q.push(x);
-                if (q.length > count) {
-                    q.shift();
-                }
-            }, observer.onError.bind(observer), function () {
-                observer.onNext(q);
-                observer.onCompleted();
+    observableProto.selectConcat = observableProto.concatMap = function (selector, resultSelector, thisArg) {
+      if (resultSelector) {
+          return this.concatMap(function (x, i) {
+            var selectorResult = selector(x, i),
+              result = isPromise(selectorResult) ? observableFromPromise(selectorResult) : selectorResult;
+
+            return result.map(function (y) {
+              return resultSelector(x, y, i);
             });
-        });
+          });
+      }
+      return typeof selector === 'function' ?
+        concatMap(this, selector, thisArg) :
+        concatMap(this, function () { return selector; });
     };
 
     /**
@@ -3135,9 +3160,18 @@
         });
     };
 
-    function selectMany(selector) {
-      return this.select(function (x, i) {
-        var result = selector(x, i);
+    /**
+     * Retrieves the value of a specified property from all elements in the Observable sequence.
+     * @param {String} property The property to pluck.
+     * @returns {Observable} Returns a new Observable sequence of property values.
+     */
+    observableProto.pluck = function (property) {
+        return this.select(function (x) { return x[property]; });
+    };
+
+    function flatMap(source, selector, thisArg) {
+      return source.map(function (x, i) {
+        var result = selector.call(thisArg, x, i);
         return isPromise(result) ? observableFromPromise(result) : result;
       }).mergeObservable();
     }
@@ -3159,25 +3193,23 @@
      * @param selector A transform function to apply to each element or an observable sequence to project each element from the 
      * source sequence onto which could be either an observable or Promise.
      * @param {Function} [resultSelector]  A transform function to apply to each element of the intermediate sequence.
+     * @param {Any} [thisArg] Object to use as this when executing callback.
      * @returns {Observable} An observable sequence whose elements are the result of invoking the one-to-many transform function collectionSelector on each element of the input sequence and then mapping each of those sequence elements and their corresponding source element to a result element.   
      */
-    observableProto.selectMany = observableProto.flatMap = function (selector, resultSelector) {
+    observableProto.selectMany = observableProto.flatMap = function (selector, resultSelector, thisArg) {
       if (resultSelector) {
-          return this.selectMany(function (x, i) {
+          return this.flatMap(function (x, i) {
             var selectorResult = selector(x, i),
               result = isPromise(selectorResult) ? observableFromPromise(selectorResult) : selectorResult;
 
-            return result.select(function (y) {
+            return result.map(function (y) {
               return resultSelector(x, y, i);
             });
-          });
+          }, thisArg);
       }
-      if (typeof selector === 'function') {
-        return selectMany.call(this, selector);
-      }
-      return selectMany.call(this, function () {
-        return selector;
-      });
+      return typeof selector === 'function' ?
+        flatMap(this, selector, thisArg) :
+        flatMap(this, function () { return selector; });
     };
 
     /**
@@ -3188,7 +3220,7 @@
      * @returns {Observable} An observable sequence whose elements are the result of invoking the transform function on each element of source producing an Observable of Observable sequences 
      *  and that at any point in time produces the elements of the most recent inner observable sequence that has been received.
      */
-    observableProto.selectSwitch = observableProto.flatMapLatest = function (selector, thisArg) {
+    observableProto.selectSwitch = observableProto.flatMapLatest = observableProto.switchMap = function (selector, thisArg) {
         return this.select(selector, thisArg).switchLatest();
     };
 
@@ -3337,259 +3369,292 @@
         });
     };
 
-    /**
-     * Converts a callback function to an observable sequence. 
-     * 
-     * @param {Function} function Function with a callback as the last parameter to convert to an Observable sequence.
-     * @param {Scheduler} [scheduler] Scheduler to run the function on. If not specified, defaults to Scheduler.timeout.
-     * @param {Mixed} [context] The context for the func parameter to be executed.  If not specified, defaults to undefined.
-     * @param {Function} [selector] A selector which takes the arguments from the callback to produce a single item to yield on next.
-     * @returns {Function} A function, when executed with the required parameters minus the callback, produces an Observable sequence with a single value of the arguments to the callback as an array.
-     */
-    Observable.fromCallback = function (func, scheduler, context, selector) {
-        scheduler || (scheduler = immediateScheduler);
-        return function () {
-            var args = slice.call(arguments, 0);
+  /**
+   * Converts a callback function to an observable sequence. 
+   * 
+   * @param {Function} function Function with a callback as the last parameter to convert to an Observable sequence.
+   * @param {Mixed} [context] The context for the func parameter to be executed.  If not specified, defaults to undefined.
+   * @param {Function} [selector] A selector which takes the arguments from the callback to produce a single item to yield on next.
+   * @returns {Function} A function, when executed with the required parameters minus the callback, produces an Observable sequence with a single value of the arguments to the callback as an array.
+   */
+  Observable.fromCallback = function (func, context, selector) {
+    return function () {
+      var args = slice.call(arguments, 0);
 
-            return new AnonymousObservable(function (observer) {
-                return scheduler.schedule(function () {
-                    function handler(e) {
-                        var results = e;
-                        
-                        if (selector) {
-                            try {
-                                results = selector(arguments);
-                            } catch (err) {
-                                observer.onError(err);
-                                return;
-                            }
-                        } else {
-                            if (results.length === 1) {
-                                results = results[0];
-                            }
-                        }
-
-                        observer.onNext(results);
-                        observer.onCompleted();
-                    }
-
-                    args.push(handler);
-                    func.apply(context, args);
-                });
-            });
-        };
-    };
-
-    /**
-     * Converts a Node.js callback style function to an observable sequence.  This must be in function (err, ...) format.
-     * @param {Function} func The function to call
-     * @param {Scheduler} [scheduler] Scheduler to run the function on. If not specified, defaults to Scheduler.timeout.
-     * @param {Mixed} [context] The context for the func parameter to be executed.  If not specified, defaults to undefined.
-     * @param {Function} [selector] A selector which takes the arguments from the callback minus the error to produce a single item to yield on next.     
-     * @returns {Function} An async function which when applied, returns an observable sequence with the callback arguments as an array.
-     */
-    Observable.fromNodeCallback = function (func, scheduler, context, selector) {
-        scheduler || (scheduler = immediateScheduler);
-        return function () {
-            var args = slice.call(arguments, 0);
-
-            return new AnonymousObservable(function (observer) {
-                return scheduler.schedule(function () {
-                    
-                    function handler(err) {
-                        if (err) {
-                            observer.onError(err);
-                            return;
-                        }
-
-                        var results = slice.call(arguments, 1);
-                        
-                        if (selector) {
-                            try {
-                                results = selector(results);
-                            } catch (e) {
-                                observer.onError(e);
-                                return;
-                            }
-                        } else {
-                            if (results.length === 1) {
-                                results = results[0];
-                            }
-                        }
-
-                        observer.onNext(results);
-                        observer.onCompleted();
-                    }
-
-                    args.push(handler);
-                    func.apply(context, args);
-                });
-            });
-        };
-    };
-
-    function fixEvent(event) {
-        var stopPropagation = function () {
-            this.cancelBubble = true;
-        };
-
-        var preventDefault = function () {
-            this.bubbledKeyCode = this.keyCode;
-            if (this.ctrlKey) {
-                try {
-                    this.keyCode = 0;
-                } catch (e) { }
+      return new AnonymousObservable(function (observer) {
+        function handler(e) {
+          var results = e;
+          
+          if (selector) {
+            try {
+              results = selector(arguments);
+            } catch (err) {
+              observer.onError(err);
+              return;
             }
-            this.defaultPrevented = true;
-            this.returnValue = false;
-            this.modified = true;
-        };
 
-        event || (event = window.event);
-        if (!event.target) {
-            event.target = event.target || event.srcElement; 
-
-            if (event.type == 'mouseover') {
-                event.relatedTarget = event.fromElement;
+            observer.onNext(results);
+          } else {
+            if (results.length <= 1) { 
+              observer.onNext.apply(observer, results);
+            } else {
+              observer.onNext(results);
             }
-            if (event.type == 'mouseout') {
-                event.relatedTarget = event.toElement;
-            }
-            // Adding stopPropogation and preventDefault to IE
-            if (!event.stopPropagation){
-                event.stopPropagation = stopPropagation;
-                event.preventDefault = preventDefault;
-            }
-            // Normalize key events
-            switch(event.type){
-                case 'keypress':
-                    var c = ('charCode' in event ? event.charCode : event.keyCode);
-                    if (c == 10) {
-                        c = 0;
-                        event.keyCode = 13;
-                    } else if (c == 13 || c == 27) {
-                        c = 0; 
-                    } else if (c == 3) {
-                        c = 99; 
-                    }
-                    event.charCode = c;
-                    event.keyChar = event.charCode ? String.fromCharCode(event.charCode) : '';
-                    break;
-            }                    
+          }
+          
+          observer.onCompleted();
         }
 
-        return event;
+        args.push(handler);
+        func.apply(context, args);
+      });
+    };
+  };
+
+  /**
+   * Converts a Node.js callback style function to an observable sequence.  This must be in function (err, ...) format.
+   * @param {Function} func The function to call
+   * @param {Mixed} [context] The context for the func parameter to be executed.  If not specified, defaults to undefined.
+   * @param {Function} [selector] A selector which takes the arguments from the callback minus the error to produce a single item to yield on next.     
+   * @returns {Function} An async function which when applied, returns an observable sequence with the callback arguments as an array.
+   */
+  Observable.fromNodeCallback = function (func, context, selector) {
+    return function () {
+      var args = slice.call(arguments, 0);
+
+      return new AnonymousObservable(function (observer) {
+        function handler(err) {
+          if (err) {
+            observer.onError(err);
+            return;
+          }
+
+          var results = slice.call(arguments, 1);
+          
+          if (selector) {
+            try {
+              results = selector(results);
+            } catch (e) {
+              observer.onError(e);
+              return;
+            }
+            observer.onNext(results);
+          } else {
+            if (results.length <= 1) { 
+              observer.onNext.apply(observer, results);
+            } else {
+              observer.onNext(results);
+            }
+          }
+
+          observer.onCompleted();
+        }
+
+        args.push(handler);
+        func.apply(context, args);
+      });
+    };
+  };
+
+  function fixEvent(event) {
+    var stopPropagation = function () {
+      this.cancelBubble = true;
+    };
+
+    var preventDefault = function () {
+      this.bubbledKeyCode = this.keyCode;
+      if (this.ctrlKey) {
+        try {
+          this.keyCode = 0;
+        } catch (e) { }
+      }
+      this.defaultPrevented = true;
+      this.returnValue = false;
+      this.modified = true;
+    };
+
+    event || (event = root.event);
+    if (!event.target) {
+      event.target = event.target || event.srcElement; 
+
+      if (event.type == 'mouseover') {
+        event.relatedTarget = event.fromElement;
+      }
+      if (event.type == 'mouseout') {
+        event.relatedTarget = event.toElement;
+      }
+      // Adding stopPropogation and preventDefault to IE
+      if (!event.stopPropagation){
+        event.stopPropagation = stopPropagation;
+        event.preventDefault = preventDefault;
+      }
+      // Normalize key events
+      switch(event.type){
+        case 'keypress':
+          var c = ('charCode' in event ? event.charCode : event.keyCode);
+          if (c == 10) {
+            c = 0;
+            event.keyCode = 13;
+          } else if (c == 13 || c == 27) {
+            c = 0; 
+          } else if (c == 3) {
+            c = 99; 
+          }
+          event.charCode = c;
+          event.keyChar = event.charCode ? String.fromCharCode(event.charCode) : '';
+          break;
+      }                    
     }
 
-    function createListener (element, name, handler) {
-        // Node.js specific
-        if (element.addListener) {
-            element.addListener(name, handler);
-            return disposableCreate(function () {
-                element.removeListener(name, handler);
-            });
-        }
-        // Standards compliant
-        if (element.addEventListener) {
-            element.addEventListener(name, handler, false);
-            return disposableCreate(function () {
-                element.removeEventListener(name, handler, false);
-            });
-        } else if (element.attachEvent) {
-            // IE Specific
-            var innerHandler = function (event) {
-                handler(fixEvent(event));
-            };
-            element.attachEvent('on' + name, innerHandler);
-            return disposableCreate(function () {
-                element.detachEvent('on' + name, innerHandler);
-            });         
-        } else {
-            // Level 1 DOM Events      
-            element['on' + name] = handler;
-            return disposableCreate(function () {
-                element['on' + name] = null;
-            });
-        }
+    return event;
+  }
+
+  function createListener (element, name, handler) {
+    // Node.js specific
+    if (element.addListener) {
+      element.addListener(name, handler);
+      return disposableCreate(function () {
+        element.removeListener(name, handler);
+      });
+    }
+    // Standards compliant
+    if (element.addEventListener) {
+      element.addEventListener(name, handler, false);
+      return disposableCreate(function () {
+        element.removeEventListener(name, handler, false);
+      });
+    } 
+    if (element.attachEvent) {
+      // IE Specific
+      var innerHandler = function (event) {
+        handler(fixEvent(event));
+      };
+      element.attachEvent('on' + name, innerHandler);
+      return disposableCreate(function () {
+        element.detachEvent('on' + name, innerHandler);
+      });         
+    }
+    // Level 1 DOM Events      
+    element['on' + name] = handler;
+    return disposableCreate(function () {
+      element['on' + name] = null;
+    });
+  }
+
+  function createEventListener (el, eventName, handler) {
+    var disposables = new CompositeDisposable();
+
+    // Asume NodeList
+    if (Object.prototype.toString.call(el) === '[object NodeList]') {
+      for (var i = 0, len = el.length; i < len; i++) {
+        disposables.add(createEventListener(el.item(i), eventName, handler));
+      }
+    } else if (el) {
+      disposables.add(createListener(el, eventName, handler));
     }
 
-    function createEventListener (el, eventName, handler) {
-        var disposables = new CompositeDisposable();
+    return disposables;
+  }
 
-        // Asume NodeList
-        if (el && el.length) {
-            for (var i = 0, len = el.length; i < len; i++) {
-                disposables.add(createEventListener(el[i], eventName, handler));
-            }
-        } else if (el) {
-            disposables.add(createListener(el, eventName, handler));
-        }
+  // Check for Angular/jQuery/Zepto support
+  var jq =
+   !!root.angular && !!angular.element ? angular.element :
+   (!!root.jQuery ? root.jQuery : (
+     !!root.Zepto ? root.Zepto : null));
 
-        return disposables;
+  // Check for ember
+  var ember = !!root.Ember && typeof root.Ember.addListener === 'function';
+  
+  // Check for Backbone.Marionette. Note if using AMD add Marionette as a dependency of rxjs
+  // for proper loading order!
+  var marionette = !!root.Backbone && !!root.Backbone.Marionette;
+
+  /**
+   * Creates an observable sequence by adding an event listener to the matching DOMElement or each item in the NodeList.
+   *
+   * @example
+   *   var source = Rx.Observable.fromEvent(element, 'mouseup');
+   * 
+   * @param {Object} element The DOMElement or NodeList to attach a listener.
+   * @param {String} eventName The event name to attach the observable sequence.
+   * @param {Function} [selector] A selector which takes the arguments from the event handler to produce a single item to yield on next.     
+   * @returns {Observable} An observable sequence of events from the specified element and the specified event.
+   */
+  
+  
+
+  Observable.fromEvent = function (element, eventName, selector) {
+    
+    if (marionette) {
+      return fromEventPattern(
+        function (h) { element.on(eventName, h); },
+        function (h) { element.off(eventName, h); },
+        selector);
     }
+    if (ember) {
+      return fromEventPattern(
+        function (h) { Ember.addListener(element, eventName, h); },
+        function (h) { Ember.removeListener(element, eventName, h); },
+        selector);
+    }    
+    if (jq) {
+      var $elem = jq(element);
+      return fromEventPattern(
+        function (h) { $elem.on(eventName, h); },
+        function (h) { $elem.off(eventName, h); },
+        selector);
+    }
+    return new AnonymousObservable(function (observer) {
+      return createEventListener(
+        element, 
+        eventName, 
+        function handler (e) { 
+          var results = e;
 
-    /**
-     * Creates an observable sequence by adding an event listener to the matching DOMElement or each item in the NodeList.
-     *
-     * @example
-     *   var source = Rx.Observable.fromEvent(element, 'mouseup');
-     * 
-     * @param {Object} element The DOMElement or NodeList to attach a listener.
-     * @param {String} eventName The event name to attach the observable sequence.
-     * @param {Function} [selector] A selector which takes the arguments from the event handler to produce a single item to yield on next.
-     * @returns {Observable} An observable sequence of events from the specified element and the specified event.
-     */
-    Observable.fromEvent = function (element, eventName, selector) {
-        return new AnonymousObservable(function (observer) {
-            return createEventListener(
-                element, 
-                eventName, 
-                function handler (e) { 
-                    var results = e;
-
-                    if (selector) {
-                        try {
-                            results = selector(arguments);
-                        } catch (err) {
-                            observer.onError(err);
-                            return
-                        }
-                    }
-
-                    observer.onNext(results); 
-                });
-        }).publish().refCount();
-    };
-    /**
-     * Creates an observable sequence from an event emitter via an addHandler/removeHandler pair.
-     * @param {Function} addHandler The function to add a handler to the emitter.
-     * @param {Function} [removeHandler] The optional function to remove a handler from an emitter.
-     * @param {Function} [selector] A selector which takes the arguments from the event handler to produce a single item to yield on next.
-     * @returns {Observable} An observable sequence which wraps an event from an event emitter
-     */
-    Observable.fromEventPattern = function (addHandler, removeHandler, selector) {
-        return new AnonymousObservable(function (observer) {
-            function innerHandler (e) {
-                var result = e;
-                if (selector) {
-                    try {
-                        result = selector(arguments);
-                    } catch (err) {
-                        observer.onError(err);
-                        return;
-                    }
-                }
-                observer.onNext(result);
+          if (selector) {
+            try {
+              results = selector(arguments);
+            } catch (err) {
+              observer.onError(err);
+              return
             }
+          }
 
-            var returnValue = addHandler(innerHandler);
-            return disposableCreate(function () {
-                if (removeHandler) {
-                    removeHandler(innerHandler, returnValue);
-                }
-            });
-        }).publish().refCount();
-    };
+          observer.onNext(results); 
+        });
+    }).publish().refCount();
+  };
+
+  /**
+   * Creates an observable sequence from an event emitter via an addHandler/removeHandler pair.
+   * @param {Function} addHandler The function to add a handler to the emitter.
+   * @param {Function} [removeHandler] The optional function to remove a handler from an emitter.
+   * @param {Function} [selector] A selector which takes the arguments from the event handler to produce a single item to yield on next.
+   * @returns {Observable} An observable sequence which wraps an event from an event emitter
+   */
+  var fromEventPattern = Observable.fromEventPattern = function (addHandler, removeHandler, selector) {
+    return new AnonymousObservable(function (observer) {
+      function innerHandler (e) {
+        var result = e;
+        if (selector) {
+          try {
+            result = selector(arguments);
+          } catch (err) {
+            observer.onError(err);
+            return;
+          }
+        }
+        observer.onNext(result);
+      }
+
+      var returnValue = addHandler(innerHandler);
+      return disposableCreate(function () {
+        if (removeHandler) {
+          removeHandler(innerHandler, returnValue);
+        }
+      });
+    }).publish().refCount();
+  };
 
   /**
    * Converts a Promise to an Observable sequence
@@ -3606,6 +3671,12 @@
         function (reason) {
           observer.onError(reason);
         });
+
+      return function () {
+        if (promise && promise.abort) {
+          promise.abort();
+        }
+      }
     });
   };
     /*
@@ -3655,32 +3726,32 @@
     return observableFromPromise(promise);
   }
 
-    /**
-     * Multicasts the source sequence notifications through an instantiated subject into all uses of the sequence within a selector function. Each
-     * subscription to the resulting sequence causes a separate multicast invocation, exposing the sequence resulting from the selector function's
-     * invocation. For specializations with fixed subject types, see Publish, PublishLast, and Replay.
-     * 
-     * @example
-     * 1 - res = source.multicast(observable);
-     * 2 - res = source.multicast(function () { return new Subject(); }, function (x) { return x; });
-     * 
-     * @param {Function|Subject} subjectOrSubjectSelector 
-     * Factory function to create an intermediate subject through which the source sequence's elements will be multicast to the selector function.
-     * Or:
-     * Subject to push source elements into.
-     * 
-     * @param {Function} [selector] Optional selector function which can use the multicasted source sequence subject to the policies enforced by the created subject. Specified only if <paramref name="subjectOrSubjectSelector" is a factory function.
-     * @returns {Observable} An observable sequence that contains the elements of a sequence produced by multicasting the source sequence within a selector function.
-     */
-    observableProto.multicast = function (subjectOrSubjectSelector, selector) {
-        var source = this;
-        return typeof subjectOrSubjectSelector === 'function' ?
-            new AnonymousObservable(function (observer) {
-                var connectable = source.multicast(subjectOrSubjectSelector());
-                return new CompositeDisposable(selector(connectable).subscribe(observer), connectable.connect());
-            }) :
-            new ConnectableObservable(source, subjectOrSubjectSelector);
-    };
+  /**
+   * Multicasts the source sequence notifications through an instantiated subject into all uses of the sequence within a selector function. Each
+   * subscription to the resulting sequence causes a separate multicast invocation, exposing the sequence resulting from the selector function's
+   * invocation. For specializations with fixed subject types, see Publish, PublishLast, and Replay.
+   * 
+   * @example
+   * 1 - res = source.multicast(observable);
+   * 2 - res = source.multicast(function () { return new Subject(); }, function (x) { return x; });
+   * 
+   * @param {Function|Subject} subjectOrSubjectSelector 
+   * Factory function to create an intermediate subject through which the source sequence's elements will be multicast to the selector function.
+   * Or:
+   * Subject to push source elements into.
+   * 
+   * @param {Function} [selector] Optional selector function which can use the multicasted source sequence subject to the policies enforced by the created subject. Specified only if <paramref name="subjectOrSubjectSelector" is a factory function.
+   * @returns {Observable} An observable sequence that contains the elements of a sequence produced by multicasting the source sequence within a selector function.
+   */
+  observableProto.multicast = function (subjectOrSubjectSelector, selector) {
+    var source = this;
+    return typeof subjectOrSubjectSelector === 'function' ?
+      new AnonymousObservable(function (observer) {
+          var connectable = source.multicast(subjectOrSubjectSelector());
+          return new CompositeDisposable(selector(connectable).subscribe(observer), connectable.connect());
+      }) :
+      new ConnectableObservable(source, subjectOrSubjectSelector);
+  };
 
     /**
      * Returns an observable sequence that is the result of invoking the selector on a connectable observable sequence that shares a single subscription to the underlying sequence.
@@ -3792,90 +3863,88 @@
             }, selector);
     };
 
-    /**
-     * Returns an observable sequence that shares a single subscription to the underlying sequence replaying notifications subject to a maximum time length for the replay buffer.
-     * This operator is a specialization of replay which creates a subscription when the number of observers goes from zero to one, then shares that subscription with all subsequent observers until the number of observers returns to zero, at which point the subscription is disposed.
-     * 
-     * @example
-     * var res = source.shareReplay(3);
-     * var res = source.shareReplay(3, 500);
-     * var res = source.shareReplay(3, 500, scheduler);
-     * 
+  /**
+   * Returns an observable sequence that shares a single subscription to the underlying sequence replaying notifications subject to a maximum time length for the replay buffer.
+   * This operator is a specialization of replay which creates a subscription when the number of observers goes from zero to one, then shares that subscription with all subsequent observers until the number of observers returns to zero, at which point the subscription is disposed.
+   * 
+   * @example
+   * var res = source.shareReplay(3);
+   * var res = source.shareReplay(3, 500);
+   * var res = source.shareReplay(3, 500, scheduler);
+   * 
 
-     * @param bufferSize [Optional] Maximum element count of the replay buffer.
-     * @param window [Optional] Maximum time length of the replay buffer.
-     * @param scheduler [Optional] Scheduler where connected observers within the selector function will be invoked on.
-     * @returns {Observable} An observable sequence that contains the elements of a sequence produced by multicasting the source sequence.
-     */
-    observableProto.shareReplay = function (bufferSize, window, scheduler) {
-        return this.replay(null, bufferSize, window, scheduler).refCount();
+   * @param bufferSize [Optional] Maximum element count of the replay buffer.
+   * @param window [Optional] Maximum time length of the replay buffer.
+   * @param scheduler [Optional] Scheduler where connected observers within the selector function will be invoked on.
+   * @returns {Observable} An observable sequence that contains the elements of a sequence produced by multicasting the source sequence.
+   */
+  observableProto.shareReplay = function (bufferSize, window, scheduler) {
+    return this.replay(null, bufferSize, window, scheduler).refCount();
+  };
+
+  var ConnectableObservable = Rx.ConnectableObservable = (function (__super__) {
+    inherits(ConnectableObservable, __super__);
+
+    function ConnectableObservable(source, subject) {
+      var hasSubscription = false, 
+        subscription,
+        sourceObservable = source.asObservable();
+
+      this.connect = function () {
+        if (!hasSubscription) {
+          hasSubscription = true;
+          subscription = new CompositeDisposable(sourceObservable.subscribe(subject), disposableCreate(function () {
+            hasSubscription = false;
+          }));
+        }
+        return subscription;
+      };
+
+      __super__.call(this, subject.subscribe.bind(subject));
+    }
+    
+    ConnectableObservable.prototype.refCount = function () {
+      var connectableSubscription, count = 0, source = this;
+      return new AnonymousObservable(function (observer) {
+          var shouldConnect = ++count === 1,
+            subscription = source.subscribe(observer);
+          shouldConnect && (connectableSubscription = source.connect());
+          return function () {
+            subscription.dispose();
+            --count === 0 && connectableSubscription.dispose();
+          };
+      });
     };
 
-    /** @private */
-    var ConnectableObservable = Rx.ConnectableObservable = (function (_super) {
-        inherits(ConnectableObservable, _super);
-
-        /**
-         * @constructor
-         * @private
-         */
-        function ConnectableObservable(source, subject) {
-            var state = {
-                subject: subject,
-                source: source.asObservable(),
-                hasSubscription: false,
-                subscription: null
-            };
-
-            this.connect = function () {
-                if (!state.hasSubscription) {
-                    state.hasSubscription = true;
-                    state.subscription = new CompositeDisposable(state.source.subscribe(state.subject), disposableCreate(function () {
-                        state.hasSubscription = false;
-                    }));
-                }
-                return state.subscription;
-            };
-
-            function subscribe(observer) {
-                return state.subject.subscribe(observer);
-            }
-
-            _super.call(this, subscribe);
-        }
-
-        /**
-         * @private
-         * @memberOf ConnectableObservable
-         */
-        ConnectableObservable.prototype.connect = function () { return this.connect(); };
-
-        /**
-         * @private
-         * @memberOf ConnectableObservable
-         */        
-        ConnectableObservable.prototype.refCount = function () {
-            var connectableSubscription = null, count = 0, source = this;
-            return new AnonymousObservable(function (observer) {
-                var shouldConnect, subscription;
-                count++;
-                shouldConnect = count === 1;
-                subscription = source.subscribe(observer);
-                if (shouldConnect) {
-                    connectableSubscription = source.connect();
-                }
-                return disposableCreate(function () {
-                    subscription.dispose();
-                    count--;
-                    if (count === 0) {
-                        connectableSubscription.dispose();
-                    }
-                });
+    return ConnectableObservable;
+  }(Observable));
+    function observableTimerDate(dueTime, scheduler) {
+        return new AnonymousObservable(function (observer) {
+            return scheduler.scheduleWithAbsolute(dueTime, function () {
+                observer.onNext(0);
+                observer.onCompleted();
             });
-        };
+        });
+    }
 
-        return ConnectableObservable;
-    }(Observable));
+  function observableTimerDateAndPeriod(dueTime, period, scheduler) {
+    var p = normalizeTime(period);
+    return new AnonymousObservable(function (observer) {
+      var count = 0, d = dueTime;
+      return scheduler.scheduleRecursiveWithAbsolute(d, function (self) {
+        var now;
+        if (p > 0) {
+          now = scheduler.now();
+          d = d + p;
+          if (d <= now) {
+            d = now + p;
+          }
+        }
+        observer.onNext(count++);
+        self(d);
+      });
+    });
+  }
 
     function observableTimerTimeSpan(dueTime, scheduler) {
         var d = normalizeTime(dueTime);
@@ -3887,392 +3956,322 @@
         });
     }
 
-    function observableTimerTimeSpanAndPeriod(dueTime, period, scheduler) {
-        if (dueTime === period) {
-            return new AnonymousObservable(function (observer) {
-                return scheduler.schedulePeriodicWithState(0, period, function (count) {
-                    observer.onNext(count);
-                    return count + 1;
-                });
-            });
-        }
-        return observableDefer(function () {
-            return observableTimerDateAndPeriod(scheduler.now() + dueTime, period, scheduler);
+  function observableTimerTimeSpanAndPeriod(dueTime, period, scheduler) {
+    if (dueTime === period) {
+      return new AnonymousObservable(function (observer) {
+        return scheduler.schedulePeriodicWithState(0, period, function (count) {
+          observer.onNext(count);
+          return count + 1;
         });
+      });
     }
+    return observableDefer(function () {
+      return observableTimerDateAndPeriod(scheduler.now() + dueTime, period, scheduler);
+    });
+  }
 
-    /**
-     *  Returns an observable sequence that produces a value after each period.
-     *  
-     * @example
-     *  1 - res = Rx.Observable.interval(1000);
-     *  2 - res = Rx.Observable.interval(1000, Rx.Scheduler.timeout);
-     *      
-     * @param {Number} period Period for producing the values in the resulting sequence (specified as an integer denoting milliseconds).
-     * @param {Scheduler} [scheduler] Scheduler to run the timer on. If not specified, Rx.Scheduler.timeout is used.
-     * @returns {Observable} An observable sequence that produces a value after each period.
-     */
-    var observableinterval = Observable.interval = function (period, scheduler) {
-        scheduler || (scheduler = timeoutScheduler);
-        return observableTimerTimeSpanAndPeriod(period, period, scheduler);
-    };
+  /**
+   *  Returns an observable sequence that produces a value after each period.
+   *  
+   * @example
+   *  1 - res = Rx.Observable.interval(1000);
+   *  2 - res = Rx.Observable.interval(1000, Rx.Scheduler.timeout);
+   *      
+   * @param {Number} period Period for producing the values in the resulting sequence (specified as an integer denoting milliseconds).
+   * @param {Scheduler} [scheduler] Scheduler to run the timer on. If not specified, Rx.Scheduler.timeout is used.
+   * @returns {Observable} An observable sequence that produces a value after each period.
+   */
+  var observableinterval = Observable.interval = function (period, scheduler) {
+    return observableTimerTimeSpanAndPeriod(period, period, isScheduler(scheduler) ? scheduler : timeoutScheduler);
+  };
 
-    /**
-     *  Returns an observable sequence that produces a value after dueTime has elapsed and then after each period.
-     *  
-     * @example
-     *  var res = Rx.Observable.timer(5000);
-     *  var res = Rx.Observable.timer(5000, 1000);
-     *  var res = Rx.Observable.timer(5000, Rx.Scheduler.timeout);
-     *  var res = Rx.Observable.timer(5000, 1000, Rx.Scheduler.timeout);
-     *  
-     * @param {Number} dueTime Relative time (specified as an integer denoting milliseconds) at which to produce the first value.
-     * @param {Mixed} [periodOrScheduler]  Period to produce subsequent values (specified as an integer denoting milliseconds), or the scheduler to run the timer on. If not specified, the resulting timer is not recurring.
-     * @param {Scheduler} [scheduler]  Scheduler to run the timer on. If not specified, the timeout scheduler is used.
-     * @returns {Observable} An observable sequence that produces a value after due time has elapsed and then each period.
-     */
-    var observableTimer = Observable.timer = function (dueTime, periodOrScheduler, scheduler) {
-        var period;
-        scheduler || (scheduler = timeoutScheduler);
-        if (typeof periodOrScheduler === 'number') {
-            period = periodOrScheduler;
-        } else if (typeof periodOrScheduler === 'object' && 'now' in periodOrScheduler) {
-            scheduler = periodOrScheduler;
-        }
-        return period === undefined ?
-            observableTimerTimeSpan(dueTime, scheduler) :
-            observableTimerTimeSpanAndPeriod(dueTime, period, scheduler);
-    };
-
-    /**
-     *  Time shifts the observable sequence by dueTime. The relative time intervals between the values are preserved.
-     *  
-     * @example
-     *  var res = Rx.Observable.delay(5000);
-     *  var res = Rx.Observable.delay(5000, 1000, Rx.Scheduler.timeout);
-     * @memberOf Observable#
-     * @param {Number} dueTime Absolute (specified as a Date object) or relative time (specified as an integer denoting milliseconds) by which to shift the observable sequence.
-     * @param {Scheduler} [scheduler] Scheduler to run the delay timers on. If not specified, the timeout scheduler is used.
-     * @returns {Observable} Time-shifted sequence.
-     */
-    observableProto.delay = function (dueTime, scheduler) {
-        scheduler || (scheduler = timeoutScheduler);
-        var source = this;  
-        return new AnonymousObservable(function (observer) {
-            var active = false,
-                cancelable = new SerialDisposable(),
-                exception = null,
-                q = [],
-                running = false,
-                subscription;
-            subscription = source.materialize().timestamp(scheduler).subscribe(function (notification) {
-                var d, shouldRun;
-                if (notification.value.kind === 'E') {
-                    q = [];
-                    q.push(notification);
-                    exception = notification.value.exception;
-                    shouldRun = !running;
-                } else {
-                    q.push({ value: notification.value, timestamp: notification.timestamp + dueTime });
-                    shouldRun = !active;
-                    active = true;
-                }
-                if (shouldRun) {
-                    if (exception !== null) {
-                        observer.onError(exception);
-                    } else {
-                        d = new SingleAssignmentDisposable();
-                        cancelable.setDisposable(d);
-                        d.setDisposable(scheduler.scheduleRecursiveWithRelative(dueTime, function (self) {
-                            var e, recurseDueTime, result, shouldRecurse;
-                            if (exception !== null) {
-                                return;
-                            }
-                            running = true;
-                            do {
-                                result = null;
-                                if (q.length > 0 && q[0].timestamp - scheduler.now() <= 0) {
-                                    result = q.shift().value;
-                                }
-                                if (result !== null) {
-                                    result.accept(observer);
-                                }
-                            } while (result !== null);
-                            shouldRecurse = false;
-                            recurseDueTime = 0;
-                            if (q.length > 0) {
-                                shouldRecurse = true;
-                                recurseDueTime = Math.max(0, q[0].timestamp - scheduler.now());
-                            } else {
-                                active = false;
-                            }
-                            e = exception;
-                            running = false;
-                            if (e !== null) {
-                                observer.onError(e);
-                            } else if (shouldRecurse) {
-                                self(recurseDueTime);
-                            }
-                        }));
-                    }
-                }
-            });
-            return new CompositeDisposable(subscription, cancelable);
-        });
-    };
-
-    /**
-     *  Ignores values from an observable sequence which are followed by another value before dueTime.
-     *  
-     * @example
-     *  1 - res = source.throttle(5000); // 5 seconds
-     *  2 - res = source.throttle(5000, scheduler);        
-     * 
-     * @param {Number} dueTime Duration of the throttle period for each value (specified as an integer denoting milliseconds).
-     * @param {Scheduler} [scheduler]  Scheduler to run the throttle timers on. If not specified, the timeout scheduler is used.
-     * @returns {Observable} The throttled sequence.
-     */
-    observableProto.throttle = function (dueTime, scheduler) {
-        scheduler || (scheduler = timeoutScheduler);
-        var source = this;
-        return this.throttleWithSelector(function () { return observableTimer(dueTime, scheduler); })
-    };
-
-    /**
-     *  Records the time interval between consecutive values in an observable sequence.
-     *  
-     * @example
-     *  1 - res = source.timeInterval();
-     *  2 - res = source.timeInterval(Rx.Scheduler.timeout);
-     *      
-     * @param [scheduler]  Scheduler used to compute time intervals. If not specified, the timeout scheduler is used.
-     * @returns {Observable} An observable sequence with time interval information on values.
-     */
-    observableProto.timeInterval = function (scheduler) {
-        var source = this;
-        scheduler || (scheduler = timeoutScheduler);
-        return observableDefer(function () {
-            var last = scheduler.now();
-            return source.select(function (x) {
-                var now = scheduler.now(), span = now - last;
-                last = now;
-                return {
-                    value: x,
-                    interval: span
-                };
-            });
-        });
-    };
-
-    /**
-     *  Records the timestamp for each value in an observable sequence.
-     *  
-     * @example
-     *  1 - res = source.timestamp(); // produces { value: x, timestamp: ts }
-     *  2 - res = source.timestamp(Rx.Scheduler.timeout);
-     *      
-     * @param {Scheduler} [scheduler]  Scheduler used to compute timestamps. If not specified, the timeout scheduler is used.
-     * @returns {Observable} An observable sequence with timestamp information on values.
-     */
-    observableProto.timestamp = function (scheduler) {
-        scheduler || (scheduler = timeoutScheduler);
-        return this.select(function (x) {
-            return {
-                value: x,
-                timestamp: scheduler.now()
-            };
-        });
-    };
-
-    function sampleObservable(source, sampler) {
-        
-        return new AnonymousObservable(function (observer) {
-            var atEnd, value, hasValue;
-
-            function sampleSubscribe() {
-                if (hasValue) {
-                    hasValue = false;
-                    observer.onNext(value);
-                }
-                if (atEnd) {
-                    observer.onCompleted();
-                }
-            }
-
-            return new CompositeDisposable(
-                source.subscribe(function (newValue) {
-                    hasValue = true;
-                    value = newValue;
-                }, observer.onError.bind(observer), function () {
-                    atEnd = true;
-                }),
-                sampler.subscribe(sampleSubscribe, observer.onError.bind(observer), sampleSubscribe)
-            );
-        });
+  /**
+   *  Returns an observable sequence that produces a value after dueTime has elapsed and then after each period.
+   *  
+   * @example
+   *  1 - res = Rx.Observable.timer(new Date());
+   *  2 - res = Rx.Observable.timer(new Date(), 1000);
+   *  3 - res = Rx.Observable.timer(new Date(), Rx.Scheduler.timeout);
+   *  4 - res = Rx.Observable.timer(new Date(), 1000, Rx.Scheduler.timeout);
+   *  
+   *  5 - res = Rx.Observable.timer(5000);
+   *  6 - res = Rx.Observable.timer(5000, 1000);
+   *  7 - res = Rx.Observable.timer(5000, Rx.Scheduler.timeout);
+   *  8 - res = Rx.Observable.timer(5000, 1000, Rx.Scheduler.timeout);
+   *  
+   * @param {Number} dueTime Absolute (specified as a Date object) or relative time (specified as an integer denoting milliseconds) at which to produce the first value.
+   * @param {Mixed} [periodOrScheduler]  Period to produce subsequent values (specified as an integer denoting milliseconds), or the scheduler to run the timer on. If not specified, the resulting timer is not recurring.
+   * @param {Scheduler} [scheduler]  Scheduler to run the timer on. If not specified, the timeout scheduler is used.
+   * @returns {Observable} An observable sequence that produces a value after due time has elapsed and then each period.
+   */
+  var observableTimer = Observable.timer = function (dueTime, periodOrScheduler, scheduler) {
+    var period;
+    isScheduler(scheduler) || (scheduler = timeoutScheduler);
+    if (periodOrScheduler !== undefined && typeof periodOrScheduler === 'number') {
+      period = periodOrScheduler;
+    } else if (periodOrScheduler !== undefined && typeof periodOrScheduler === 'object') {
+      scheduler = periodOrScheduler;
     }
+    if (dueTime instanceof Date && period === undefined) {
+      return observableTimerDate(dueTime.getTime(), scheduler);
+    }
+    if (dueTime instanceof Date && period !== undefined) {
+      period = periodOrScheduler;
+      return observableTimerDateAndPeriod(dueTime.getTime(), period, scheduler);
+    }
+    return period === undefined ?
+      observableTimerTimeSpan(dueTime, scheduler) :
+      observableTimerTimeSpanAndPeriod(dueTime, period, scheduler);
+  };
 
-    /**
-     *  Samples the observable sequence at each interval.
-     *  
-     * @example
-     *  1 - res = source.sample(sampleObservable); // Sampler tick sequence
-     *  2 - res = source.sample(5000); // 5 seconds
-     *  2 - res = source.sample(5000, Rx.Scheduler.timeout); // 5 seconds
-     *      
-     * @param {Mixed} intervalOrSampler Interval at which to sample (specified as an integer denoting milliseconds) or Sampler Observable.
-     * @param {Scheduler} [scheduler]  Scheduler to run the sampling timer on. If not specified, the timeout scheduler is used.
-     * @returns {Observable} Sampled observable sequence.
-     */
-    observableProto.sample = function (intervalOrSampler, scheduler) {
-        scheduler || (scheduler = timeoutScheduler);
-        if (typeof intervalOrSampler === 'number') {
-            return sampleObservable(this, observableinterval(intervalOrSampler, scheduler));
-        }
-        return sampleObservable(this, intervalOrSampler);
-    };
-
-    /**
-     *  Returns the source observable sequence or the other observable sequence if dueTime elapses.
-     *  
-     * @example
-     *  1 - res = source.timeout(new Date()); // As a date
-     *  2 - res = source.timeout(5000); // 5 seconds
-     *  3 - res = source.timeout(new Date(), Rx.Observable.returnValue(42)); // As a date and timeout observable
-     *  4 - res = source.timeout(5000, Rx.Observable.returnValue(42)); // 5 seconds and timeout observable
-     *  5 - res = source.timeout(new Date(), Rx.Observable.returnValue(42), Rx.Scheduler.timeout); // As a date and timeout observable
-     *  6 - res = source.timeout(5000, Rx.Observable.returnValue(42), Rx.Scheduler.timeout); // 5 seconds and timeout observable
-     *      
-     * @param {Number} dueTime Absolute (specified as a Date object) or relative time (specified as an integer denoting milliseconds) when a timeout occurs.
-     * @param {Observable} [other]  Sequence to return in case of a timeout. If not specified, a timeout error throwing sequence will be used.
-     * @param {Scheduler} [scheduler]  Scheduler to run the timeout timers on. If not specified, the timeout scheduler is used.
-     * @returns {Observable} The source sequence switching to the other sequence in case of a timeout.
-     */
-    observableProto.timeout = function (dueTime, other, scheduler) {
-        var schedulerMethod, source = this;
-        other || (other = observableThrow(new Error('Timeout')));
-        scheduler || (scheduler = timeoutScheduler);
-        if (dueTime instanceof Date) {
-            schedulerMethod = function (dt, action) {
-                scheduler.scheduleWithAbsolute(dt, action);
-            };
+  function observableDelayTimeSpan(source, dueTime, scheduler) {
+    return new AnonymousObservable(function (observer) {
+      var active = false,
+        cancelable = new SerialDisposable(),
+        exception = null,
+        q = [],
+        running = false,
+        subscription;
+      subscription = source.materialize().timestamp(scheduler).subscribe(function (notification) {
+        var d, shouldRun;
+        if (notification.value.kind === 'E') {
+          q = [];
+          q.push(notification);
+          exception = notification.value.exception;
+          shouldRun = !running;
         } else {
-            schedulerMethod = function (dt, action) {
-                scheduler.scheduleWithRelative(dt, action);
-            };
+          q.push({ value: notification.value, timestamp: notification.timestamp + dueTime });
+          shouldRun = !active;
+          active = true;
         }
-        return new AnonymousObservable(function (observer) {
-            var createTimer,
-                id = 0,
-                original = new SingleAssignmentDisposable(),
-                subscription = new SerialDisposable(),
-                switched = false,
-                timer = new SerialDisposable();
-            subscription.setDisposable(original);
-            createTimer = function () {
-                var myId = id;
-                timer.setDisposable(schedulerMethod(dueTime, function () {
-                    switched = id === myId;
-                    var timerWins = switched;
-                    if (timerWins) {
-                        subscription.setDisposable(other.subscribe(observer));
-                    }
-                }));
-            };
-            createTimer();
-            original.setDisposable(source.subscribe(function (x) {
-                var onNextWins = !switched;
-                if (onNextWins) {
-                    id++;
-                    observer.onNext(x);
-                    createTimer();
+        if (shouldRun) {
+          if (exception !== null) {
+            observer.onError(exception);
+          } else {
+            d = new SingleAssignmentDisposable();
+            cancelable.setDisposable(d);
+            d.setDisposable(scheduler.scheduleRecursiveWithRelative(dueTime, function (self) {
+              var e, recurseDueTime, result, shouldRecurse;
+              if (exception !== null) {
+                return;
+              }
+              running = true;
+              do {
+                result = null;
+                if (q.length > 0 && q[0].timestamp - scheduler.now() <= 0) {
+                  result = q.shift().value;
                 }
-            }, function (e) {
-                var onErrorWins = !switched;
-                if (onErrorWins) {
-                    id++;
-                    observer.onError(e);
+                if (result !== null) {
+                  result.accept(observer);
                 }
-            }, function () {
-                var onCompletedWins = !switched;
-                if (onCompletedWins) {
-                    id++;
-                    observer.onCompleted();
-                }
+              } while (result !== null);
+              shouldRecurse = false;
+              recurseDueTime = 0;
+              if (q.length > 0) {
+                shouldRecurse = true;
+                recurseDueTime = Math.max(0, q[0].timestamp - scheduler.now());
+              } else {
+                active = false;
+              }
+              e = exception;
+              running = false;
+              if (e !== null) {
+                observer.onError(e);
+              } else if (shouldRecurse) {
+                self(recurseDueTime);
+              }
             }));
-            return new CompositeDisposable(subscription, timer);
-        });
-    };
+          }
+        }
+      });
+      return new CompositeDisposable(subscription, cancelable);
+    });
+  }
 
-    /**
-     *  Generates an observable sequence by iterating a state from an initial state until the condition fails.
-     * 
-     * @example 
-     *  res = source.generateWithRelativeTime(0, 
-     *      function (x) { return return true; }, 
-     *      function (x) { return x + 1; }, 
-     *      function (x) { return x; }, 
-     *      function (x) { return 500; }
-     *  );
-     *      
-     * @param {Mixed} initialState Initial state.
-     * @param {Function} condition Condition to terminate generation (upon returning false).
-     * @param {Function} iterate Iteration step function.
-     * @param {Function} resultSelector Selector function for results produced in the sequence.
-     * @param {Function} timeSelector Time selector function to control the speed of values being produced each iteration, returning integer values denoting milliseconds.
-     * @param {Scheduler} [scheduler]  Scheduler on which to run the generator loop. If not specified, the timeout scheduler is used.
-     * @returns {Observable} The generated sequence.
-     */
-    Observable.generateWithTime = function (initialState, condition, iterate, resultSelector, timeSelector, scheduler) {
-        scheduler || (scheduler = timeoutScheduler);
-        return new AnonymousObservable(function (observer) {
-            var first = true,
-                hasResult = false,
-                result,
-                state = initialState,
-                time;
-            return scheduler.scheduleRecursiveWithRelative(0, function (self) {
-                if (hasResult) {
-                    observer.onNext(result);
-                }
-                try {
-                    if (first) {
-                        first = false;
-                    } else {
-                        state = iterate(state);
-                    }
-                    hasResult = condition(state);
-                    if (hasResult) {
-                        result = resultSelector(state);
-                        time = timeSelector(state);
-                    }
-                } catch (e) {
-                    observer.onError(e);
-                    return;
-                }
-                if (hasResult) {
-                    self(time);
-                } else {
-                    observer.onCompleted();
-                }
-            });
-        });
-    };
+  function observableDelayDate(source, dueTime, scheduler) {
+    return observableDefer(function () {
+      return observableDelayTimeSpan(source, dueTime - scheduler.now(), scheduler);
+    });
+  }
 
-    /**
-     *  Time shifts the observable sequence by delaying the subscription.
-     *  
-     * @example
-     *  1 - res = source.delaySubscription(5000); // 5s
-     *  2 - res = source.delaySubscription(5000, Rx.Scheduler.timeout); // 5 seconds
-     *      
-     * @param {Number} dueTime Absolute or relative time to perform the subscription at.
-     * @param {Scheduler} [scheduler]  Scheduler to run the subscription delay timer on. If not specified, the timeout scheduler is used.
-     * @returns {Observable} Time-shifted sequence.
-     */
-    observableProto.delaySubscription = function (dueTime, scheduler) {
-        scheduler || (scheduler = timeoutScheduler);
-        return this.delayWithSelector(observableTimer(dueTime, scheduler), function () { return observableEmpty(); });
-    };
+  /**
+   *  Time shifts the observable sequence by dueTime. The relative time intervals between the values are preserved.
+   *  
+   * @example
+   *  1 - res = Rx.Observable.delay(new Date());
+   *  2 - res = Rx.Observable.delay(new Date(), Rx.Scheduler.timeout);
+   *  
+   *  3 - res = Rx.Observable.delay(5000);
+   *  4 - res = Rx.Observable.delay(5000, 1000, Rx.Scheduler.timeout);
+   * @memberOf Observable#
+   * @param {Number} dueTime Absolute (specified as a Date object) or relative time (specified as an integer denoting milliseconds) by which to shift the observable sequence.
+   * @param {Scheduler} [scheduler] Scheduler to run the delay timers on. If not specified, the timeout scheduler is used.
+   * @returns {Observable} Time-shifted sequence.
+   */
+  observableProto.delay = function (dueTime, scheduler) {
+    isScheduler(scheduler) || (scheduler = timeoutScheduler);
+    return dueTime instanceof Date ?
+      observableDelayDate(this, dueTime.getTime(), scheduler) :
+      observableDelayTimeSpan(this, dueTime, scheduler);
+  };
+
+  /**
+   *  Ignores values from an observable sequence which are followed by another value before dueTime.
+   *  
+   * @example
+   *  1 - res = source.throttle(5000); // 5 seconds
+   *  2 - res = source.throttle(5000, scheduler);        
+   * 
+   * @param {Number} dueTime Duration of the throttle period for each value (specified as an integer denoting milliseconds).
+   * @param {Scheduler} [scheduler]  Scheduler to run the throttle timers on. If not specified, the timeout scheduler is used.
+   * @returns {Observable} The throttled sequence.
+   */
+  observableProto.throttle = function (dueTime, scheduler) {
+    isScheduler(scheduler) || (scheduler = timeoutScheduler);
+    return this.throttleWithSelector(function () { return observableTimer(dueTime, scheduler); })
+  };
+
+  /**
+   *  Records the timestamp for each value in an observable sequence.
+   *  
+   * @example
+   *  1 - res = source.timestamp(); // produces { value: x, timestamp: ts }
+   *  2 - res = source.timestamp(Rx.Scheduler.timeout);
+   *      
+   * @param {Scheduler} [scheduler]  Scheduler used to compute timestamps. If not specified, the timeout scheduler is used.
+   * @returns {Observable} An observable sequence with timestamp information on values.
+   */
+  observableProto.timestamp = function (scheduler) {
+    isScheduler(scheduler) || (scheduler = timeoutScheduler);
+    return this.map(function (x) {
+      return { value: x, timestamp: scheduler.now() };
+    });
+  };
+
+  function sampleObservable(source, sampler) {
+      
+    return new AnonymousObservable(function (observer) {
+      var atEnd, value, hasValue;
+
+      function sampleSubscribe() {
+        if (hasValue) {
+          hasValue = false;
+          observer.onNext(value);
+        }
+        atEnd && observer.onCompleted();
+      }
+
+      return new CompositeDisposable(
+        source.subscribe(function (newValue) {
+          hasValue = true;
+          value = newValue;
+        }, observer.onError.bind(observer), function () {
+          atEnd = true;
+        }),
+        sampler.subscribe(sampleSubscribe, observer.onError.bind(observer), sampleSubscribe)
+      );
+    });
+  }
+
+  /**
+   *  Samples the observable sequence at each interval.
+   *  
+   * @example
+   *  1 - res = source.sample(sampleObservable); // Sampler tick sequence
+   *  2 - res = source.sample(5000); // 5 seconds
+   *  2 - res = source.sample(5000, Rx.Scheduler.timeout); // 5 seconds
+   *      
+   * @param {Mixed} intervalOrSampler Interval at which to sample (specified as an integer denoting milliseconds) or Sampler Observable.
+   * @param {Scheduler} [scheduler]  Scheduler to run the sampling timer on. If not specified, the timeout scheduler is used.
+   * @returns {Observable} Sampled observable sequence.
+   */
+  observableProto.sample = function (intervalOrSampler, scheduler) {
+    isScheduler(scheduler) || (scheduler = timeoutScheduler);
+    return typeof intervalOrSampler === 'number' ?
+      sampleObservable(this, observableinterval(intervalOrSampler, scheduler)) :
+      sampleObservable(this, intervalOrSampler);
+  };
+
+  /**
+   *  Returns the source observable sequence or the other observable sequence if dueTime elapses.
+   *  
+   * @example
+   *  1 - res = source.timeout(new Date()); // As a date
+   *  2 - res = source.timeout(5000); // 5 seconds
+   *  3 - res = source.timeout(new Date(), Rx.Observable.returnValue(42)); // As a date and timeout observable
+   *  4 - res = source.timeout(5000, Rx.Observable.returnValue(42)); // 5 seconds and timeout observable
+   *  5 - res = source.timeout(new Date(), Rx.Observable.returnValue(42), Rx.Scheduler.timeout); // As a date and timeout observable
+   *  6 - res = source.timeout(5000, Rx.Observable.returnValue(42), Rx.Scheduler.timeout); // 5 seconds and timeout observable
+   *      
+   * @param {Number} dueTime Absolute (specified as a Date object) or relative time (specified as an integer denoting milliseconds) when a timeout occurs.
+   * @param {Observable} [other]  Sequence to return in case of a timeout. If not specified, a timeout error throwing sequence will be used.
+   * @param {Scheduler} [scheduler]  Scheduler to run the timeout timers on. If not specified, the timeout scheduler is used.
+   * @returns {Observable} The source sequence switching to the other sequence in case of a timeout.
+   */
+  observableProto.timeout = function (dueTime, other, scheduler) {
+    other || (other = observableThrow(new Error('Timeout')));
+    isScheduler(scheduler) || (scheduler = timeoutScheduler);
+    
+    var source = this, schedulerMethod = dueTime instanceof Date ?
+      'scheduleWithAbsolute' :
+      'scheduleWithRelative';
+
+    return new AnonymousObservable(function (observer) {
+      var id = 0,
+        original = new SingleAssignmentDisposable(),
+        subscription = new SerialDisposable(),
+        switched = false,
+        timer = new SerialDisposable();
+
+      subscription.setDisposable(original);
+
+      var createTimer = function () {
+        var myId = id;
+        timer.setDisposable(scheduler[schedulerMethod](dueTime, function () {
+          if (id === myId) {
+            isPromise(other) && (other = observableFromPromise(other));
+            subscription.setDisposable(other.subscribe(observer));
+          }
+        }));
+      };
+
+      createTimer();
+      
+      original.setDisposable(source.subscribe(function (x) {
+        if (!switched) {
+          id++;
+          observer.onNext(x);
+          createTimer();
+        }
+      }, function (e) {
+        if (!switched) {
+          id++;
+          observer.onError(e);
+        }
+      }, function () {
+        if (!switched) {
+          id++;
+          observer.onCompleted();
+        }
+      }));
+      return new CompositeDisposable(subscription, timer);
+    });
+  };
+
+  /**
+   *  Time shifts the observable sequence by delaying the subscription.
+   *  
+   * @example
+   *  1 - res = source.delaySubscription(5000); // 5s
+   *  2 - res = source.delaySubscription(5000, Rx.Scheduler.timeout); // 5 seconds
+   *      
+   * @param {Number} dueTime Absolute or relative time to perform the subscription at.
+   * @param {Scheduler} [scheduler]  Scheduler to run the subscription delay timer on. If not specified, the timeout scheduler is used.
+   * @returns {Observable} Time-shifted sequence.
+   */
+  observableProto.delaySubscription = function (dueTime, scheduler) {
+    return this.delayWithSelector(observableTimer(dueTime, isScheduler(scheduler) ? scheduler : timeoutScheduler), observableEmpty);
+  };
 
     /**
      *  Time shifts the observable sequence based on a subscription delay and a delay selector function for each element.
@@ -4418,256 +4417,231 @@
         });
     };
 
-    /**
-     *  Ignores values from an observable sequence which are followed by another value within a computed throttle duration.
-     *  
-     * @example
-     *  1 - res = source.delayWithSelector(function (x) { return Rx.Scheduler.timer(x + x); }); 
-     * 
-     * @param {Function} throttleDurationSelector Selector function to retrieve a sequence indicating the throttle duration for each given element.
-     * @returns {Observable} The throttled sequence.
-     */
-    observableProto.throttleWithSelector = function (throttleDurationSelector) {
-        var source = this;
-        return new AnonymousObservable(function (observer) {
-            var value, hasValue = false, cancelable = new SerialDisposable(), id = 0, subscription = source.subscribe(function (x) {
-                var throttle;
-                try {
-                    throttle = throttleDurationSelector(x);
-                } catch (e) {
-                    observer.onError(e);
-                    return;
-                }
-                hasValue = true;
-                value = x;
-                id++;
-                var currentid = id, d = new SingleAssignmentDisposable();
-                cancelable.setDisposable(d);
-                d.setDisposable(throttle.subscribe(function () {
-                    if (hasValue && id === currentid) {
-                        observer.onNext(value);
-                    }
-                    hasValue = false;
-                    d.dispose();
-                }, observer.onError.bind(observer), function () {
-                    if (hasValue && id === currentid) {
-                        observer.onNext(value);
-                    }
-                    hasValue = false;
-                    d.dispose();
-                }));
-            }, function (e) {
-                cancelable.dispose();
-                observer.onError(e);
-                hasValue = false;
-                id++;
-            }, function () {
-                cancelable.dispose();
-                if (hasValue) {
-                    observer.onNext(value);
-                }
-                observer.onCompleted();
-                hasValue = false;
-                id++;
-            });
-            return new CompositeDisposable(subscription, cancelable);
-        });
+  /**
+   *  Ignores values from an observable sequence which are followed by another value within a computed throttle duration.
+   *  
+   * @example
+   *  1 - res = source.delayWithSelector(function (x) { return Rx.Scheduler.timer(x + x); }); 
+   * 
+   * @param {Function} throttleDurationSelector Selector function to retrieve a sequence indicating the throttle duration for each given element.
+   * @returns {Observable} The throttled sequence.
+   */
+  observableProto.throttleWithSelector = function (throttleDurationSelector) {
+    var source = this;
+    return new AnonymousObservable(function (observer) {
+      var value, hasValue = false, cancelable = new SerialDisposable(), id = 0, subscription = source.subscribe(function (x) {
+        var throttle;
+        try {
+          throttle = throttleDurationSelector(x);
+        } catch (e) {
+          observer.onError(e);
+          return;
+        }
+        hasValue = true;
+        value = x;
+        id++;
+        var currentid = id, d = new SingleAssignmentDisposable();
+        cancelable.setDisposable(d);
+        d.setDisposable(throttle.subscribe(function () {
+          if (hasValue && id === currentid) {
+            observer.onNext(value);
+          }
+          hasValue = false;
+          d.dispose();
+        }, observer.onError.bind(observer), function () {
+          if (hasValue && id === currentid) {
+            observer.onNext(value);
+          }
+          hasValue = false;
+          d.dispose();
+        }));
+      }, function (e) {
+        cancelable.dispose();
+        observer.onError(e);
+        hasValue = false;
+        id++;
+      }, function () {
+        cancelable.dispose();
+        if (hasValue) {
+            observer.onNext(value);
+        }
+        observer.onCompleted();
+        hasValue = false;
+        id++;
+      });
+      return new CompositeDisposable(subscription, cancelable);
+    });
+  };
+
+  /**
+   *  Skips elements for the specified duration from the end of the observable source sequence, using the specified scheduler to run timers.
+   *  
+   *  1 - res = source.skipLastWithTime(5000);     
+   *  2 - res = source.skipLastWithTime(5000, scheduler); 
+   *      
+   * @description
+   *  This operator accumulates a queue with a length enough to store elements received during the initial duration window.
+   *  As more elements are received, elements older than the specified duration are taken from the queue and produced on the
+   *  result sequence. This causes elements to be delayed with duration.          
+   * @param {Number} duration Duration for skipping elements from the end of the sequence.
+   * @param {Scheduler} [scheduler]  Scheduler to run the timer on. If not specified, defaults to Rx.Scheduler.timeout
+   * @returns {Observable} An observable sequence with the elements skipped during the specified duration from the end of the source sequence.
+   */
+  observableProto.skipLastWithTime = function (duration, scheduler) {
+    isScheduler(scheduler) || (scheduler = timeoutScheduler);
+    var source = this;
+    return new AnonymousObservable(function (observer) {
+      var q = [];
+      return source.subscribe(function (x) {
+        var now = scheduler.now();
+        q.push({ interval: now, value: x });
+        while (q.length > 0 && now - q[0].interval >= duration) {
+          observer.onNext(q.shift().value);
+        }
+      }, observer.onError.bind(observer), function () {
+        var now = scheduler.now();
+        while (q.length > 0 && now - q[0].interval >= duration) {
+          observer.onNext(q.shift().value);
+        }
+        observer.onCompleted();
+      });
+    });
+  };
+
+  /**
+   *  Returns elements within the specified duration from the end of the observable source sequence, using the specified schedulers to run timers and to drain the collected elements.
+   *  
+   * @example
+   *  1 - res = source.takeLastWithTime(5000, [optional timer scheduler], [optional loop scheduler]); 
+   * @description
+   *  This operator accumulates a queue with a length enough to store elements received during the initial duration window.
+   *  As more elements are received, elements older than the specified duration are taken from the queue and produced on the
+   *  result sequence. This causes elements to be delayed with duration.    
+   * @param {Number} duration Duration for taking elements from the end of the sequence.
+   * @param {Scheduler} [scheduler]  Scheduler to run the timer on. If not specified, defaults to Rx.Scheduler.timeout.
+   * @returns {Observable} An observable sequence with the elements taken during the specified duration from the end of the source sequence.
+   */
+  observableProto.takeLastWithTime = function (duration, scheduler) {
+    var source = this;
+    isScheduler(scheduler) || (scheduler = timeoutScheduler);
+    return new AnonymousObservable(function (observer) {
+      var q = [];
+
+      return source.subscribe(function (x) {
+        var now = scheduler.now();
+        q.push({ interval: now, value: x });
+        while (q.length > 0 && now - q[0].interval >= duration) {
+          q.shift();
+        }
+      }, observer.onError.bind(observer), function () {
+        var now = scheduler.now();
+        while (q.length > 0) {
+          var next = q.shift();
+          if (now - next.interval <= duration) {
+            observer.onNext(next.value);
+          }
+        }
+
+        observer.onCompleted();
+      });
+    });    
+  };
+
+  /**
+   *  Takes elements for the specified duration from the start of the observable source sequence, using the specified scheduler to run timers.
+   *  
+   * @example
+   *  1 - res = source.takeWithTime(5000,  [optional scheduler]); 
+   * @description
+   *  This operator accumulates a queue with a length enough to store elements received during the initial duration window.
+   *  As more elements are received, elements older than the specified duration are taken from the queue and produced on the
+   *  result sequence. This causes elements to be delayed with duration.    
+   * @param {Number} duration Duration for taking elements from the start of the sequence.
+   * @param {Scheduler} scheduler Scheduler to run the timer on. If not specified, defaults to Rx.Scheduler.timeout.
+   * @returns {Observable} An observable sequence with the elements taken during the specified duration from the start of the source sequence.
+   */
+  observableProto.takeWithTime = function (duration, scheduler) {
+    var source = this;
+    isScheduler(scheduler) || (scheduler = timeoutScheduler);
+    return new AnonymousObservable(function (observer) {
+      return new CompositeDisposable(scheduler.scheduleWithRelative(duration, observer.onCompleted.bind(observer)), source.subscribe(observer));
+    });
+  };
+
+  /**
+   *  Skips elements for the specified duration from the start of the observable source sequence, using the specified scheduler to run timers.
+   *  
+   * @example
+   *  1 - res = source.skipWithTime(5000, [optional scheduler]); 
+   *  
+   * @description     
+   *  Specifying a zero value for duration doesn't guarantee no elements will be dropped from the start of the source sequence.
+   *  This is a side-effect of the asynchrony introduced by the scheduler, where the action that causes callbacks from the source sequence to be forwarded
+   *  may not execute immediately, despite the zero due time.
+   *  
+   *  Errors produced by the source sequence are always forwarded to the result sequence, even if the error occurs before the duration.      
+   * @param {Number} duration Duration for skipping elements from the start of the sequence.
+   * @param {Scheduler} scheduler Scheduler to run the timer on. If not specified, defaults to Rx.Scheduler.timeout.
+   * @returns {Observable} An observable sequence with the elements skipped during the specified duration from the start of the source sequence.
+   */
+  observableProto.skipWithTime = function (duration, scheduler) {
+    var source = this;
+    isScheduler(scheduler) || (scheduler = timeoutScheduler);
+    return new AnonymousObservable(function (observer) {
+      var open = false;
+      return new CompositeDisposable(
+        scheduler.scheduleWithRelative(duration, function () { open = true; }), 
+        source.subscribe(function (x) { open && observer.onNext(x); }, observer.onError.bind(observer), observer.onCompleted.bind(observer)));
+    });
+  };
+
+  var PausableObservable = (function (_super) {
+
+    inherits(PausableObservable, _super);
+
+    function subscribe(observer) {
+      var conn = this.source.publish(),
+        subscription = conn.subscribe(observer),
+        connection = disposableEmpty;
+
+      var pausable = this.subject.distinctUntilChanged().subscribe(function (b) {
+        if (b) {
+          connection = conn.connect();
+        } else {
+          connection.dispose();
+          connection = disposableEmpty;
+        }
+      });
+
+      return new CompositeDisposable(subscription, connection, pausable);
+    }
+
+    function PausableObservable(source, subject) {
+      this.source = source;
+      this.subject = subject || new Subject();
+      this.isPaused = true;
+      _super.call(this, subscribe);
+    }
+
+    PausableObservable.prototype.pause = function () {
+      if (this.isPaused === true){
+        return;
+      }
+      this.isPaused = true;
+      this.subject.onNext(false);
     };
 
-    /**
-     *  Skips elements for the specified duration from the end of the observable source sequence, using the specified scheduler to run timers.
-     *  
-     *  1 - res = source.skipLastWithTime(5000);     
-     *  2 - res = source.skipLastWithTime(5000, scheduler); 
-     *      
-     * @description
-     *  This operator accumulates a queue with a length enough to store elements received during the initial duration window.
-     *  As more elements are received, elements older than the specified duration are taken from the queue and produced on the
-     *  result sequence. This causes elements to be delayed with duration.          
-     * @param {Number} duration Duration for skipping elements from the end of the sequence.
-     * @param {Scheduler} [scheduler]  Scheduler to run the timer on. If not specified, defaults to Rx.Scheduler.timeout
-     * @returns {Observable} An observable sequence with the elements skipped during the specified duration from the end of the source sequence.
-     */
-    observableProto.skipLastWithTime = function (duration, scheduler) {
-        scheduler || (scheduler = timeoutScheduler);
-        var source = this;
-        return new AnonymousObservable(function (observer) {
-            var q = [];
-            return source.subscribe(function (x) {
-                var now = scheduler.now();
-                q.push({ interval: now, value: x });
-                while (q.length > 0 && now - q[0].interval >= duration) {
-                    observer.onNext(q.shift().value);
-                }
-            }, observer.onError.bind(observer), function () {
-                var now = scheduler.now();
-                while (q.length > 0 && now - q[0].interval >= duration) {
-                    observer.onNext(q.shift().value);
-                }
-                observer.onCompleted();
-            });
-        });
+    PausableObservable.prototype.resume = function () {
+      if (this.isPaused === false){
+        return;
+      }
+      this.isPaused = false;
+      this.subject.onNext(true);
     };
 
-    /**
-     *  Returns elements within the specified duration from the end of the observable source sequence, using the specified schedulers to run timers and to drain the collected elements.
-     *  
-     * @example
-     *  1 - res = source.takeLastWithTime(5000, [optional timer scheduler], [optional loop scheduler]); 
-     * @description
-     *  This operator accumulates a queue with a length enough to store elements received during the initial duration window.
-     *  As more elements are received, elements older than the specified duration are taken from the queue and produced on the
-     *  result sequence. This causes elements to be delayed with duration.    
-     * @param {Number} duration Duration for taking elements from the end of the sequence.
-     * @param {Scheduler} [timerScheduler]  Scheduler to run the timer on. If not specified, defaults to Rx.Scheduler.timeout.
-     * @param {Scheduler} [loopScheduler]  Scheduler to drain the collected elements. If not specified, defaults to Rx.Scheduler.immediate.
-     * @returns {Observable} An observable sequence with the elements taken during the specified duration from the end of the source sequence.
-     */
-    observableProto.takeLastWithTime = function (duration, timerScheduler, loopScheduler) {
-        return this.takeLastBufferWithTime(duration, timerScheduler).selectMany(function (xs) { return observableFromArray(xs, loopScheduler); });
-    };
+    return PausableObservable;
 
-    /**
-     *  Returns an array with the elements within the specified duration from the end of the observable source sequence, using the specified scheduler to run timers.
-     *  
-     * @example
-     *  1 - res = source.takeLastBufferWithTime(5000, [optional scheduler]); 
-     * @description
-     *  This operator accumulates a queue with a length enough to store elements received during the initial duration window.
-     *  As more elements are received, elements older than the specified duration are taken from the queue and produced on the
-     *  result sequence. This causes elements to be delayed with duration.   
-     * @param {Number} duration Duration for taking elements from the end of the sequence.
-     * @param {Scheduler} scheduler Scheduler to run the timer on. If not specified, defaults to Rx.Scheduler.timeout.
-     * @returns {Observable} An observable sequence containing a single array with the elements taken during the specified duration from the end of the source sequence.
-     */
-    observableProto.takeLastBufferWithTime = function (duration, scheduler) {
-        var source = this;
-        scheduler || (scheduler = timeoutScheduler);
-        return new AnonymousObservable(function (observer) {
-            var q = [];
-
-            return source.subscribe(function (x) {
-                var now = scheduler.now();
-                q.push({ interval: now, value: x });
-                while (q.length > 0 && now - q[0].interval >= duration) {
-                    q.shift();
-                }
-            }, observer.onError.bind(observer), function () {
-                var now = scheduler.now(), res = [];
-                while (q.length > 0) {
-                    var next = q.shift();
-                    if (now - next.interval <= duration) {
-                        res.push(next.value);
-                    }
-                }
-
-                observer.onNext(res);
-                observer.onCompleted();
-            });
-        });
-    };
-
-    /**
-     *  Takes elements for the specified duration from the start of the observable source sequence, using the specified scheduler to run timers.
-     *  
-     * @example
-     *  1 - res = source.takeWithTime(5000,  [optional scheduler]); 
-     * @description
-     *  This operator accumulates a queue with a length enough to store elements received during the initial duration window.
-     *  As more elements are received, elements older than the specified duration are taken from the queue and produced on the
-     *  result sequence. This causes elements to be delayed with duration.    
-     * @param {Number} duration Duration for taking elements from the start of the sequence.
-     * @param {Scheduler} scheduler Scheduler to run the timer on. If not specified, defaults to Rx.Scheduler.timeout.
-     * @returns {Observable} An observable sequence with the elements taken during the specified duration from the start of the source sequence.
-     */
-    observableProto.takeWithTime = function (duration, scheduler) {
-        var source = this;
-        scheduler || (scheduler = timeoutScheduler);
-        return new AnonymousObservable(function (observer) {
-            var t = scheduler.scheduleWithRelative(duration, function () {
-                observer.onCompleted();
-            });
-
-            return new CompositeDisposable(t, source.subscribe(observer));
-        });
-    };
-
-    /**
-     *  Skips elements for the specified duration from the start of the observable source sequence, using the specified scheduler to run timers.
-     *  
-     * @example
-     *  1 - res = source.skipWithTime(5000, [optional scheduler]); 
-     *  
-     * @description     
-     *  Specifying a zero value for duration doesn't guarantee no elements will be dropped from the start of the source sequence.
-     *  This is a side-effect of the asynchrony introduced by the scheduler, where the action that causes callbacks from the source sequence to be forwarded
-     *  may not execute immediately, despite the zero due time.
-     *  
-     *  Errors produced by the source sequence are always forwarded to the result sequence, even if the error occurs before the duration.      
-     * @param {Number} duration Duration for skipping elements from the start of the sequence.
-     * @param {Scheduler} scheduler Scheduler to run the timer on. If not specified, defaults to Rx.Scheduler.timeout.
-     * @returns {Observable} An observable sequence with the elements skipped during the specified duration from the start of the source sequence.
-     */
-    observableProto.skipWithTime = function (duration, scheduler) {
-        var source = this;
-        scheduler || (scheduler = timeoutScheduler);
-        return new AnonymousObservable(function (observer) {
-            var open = false,
-                t = scheduler.scheduleWithRelative(duration, function () { open = true; }),
-                d = source.subscribe(function (x) {
-                    if (open) {
-                        observer.onNext(x);
-                    }
-                }, observer.onError.bind(observer), observer.onCompleted.bind(observer));
-
-            return new CompositeDisposable(t, d);
-        });
-    };
-
-    /**
-     *  Skips elements from the observable source sequence until the specified start time, using the specified scheduler to run timers.
-     *  Errors produced by the source sequence are always forwarded to the result sequence, even if the error occurs before the start time>.
-     *  
-     * @examples
-     *  1 - res = source.skipUntilWithTime(new Date(), [optional scheduler]);         
-     * @param startTime Time to start taking elements from the source sequence. If this value is less than or equal to Date(), no elements will be skipped.
-     * @param scheduler Scheduler to run the timer on. If not specified, defaults to Rx.Scheduler.timeout.
-     * @returns {Observable} An observable sequence with the elements skipped until the specified start time. 
-     */
-    observableProto.skipUntilWithTime = function (startTime, scheduler) {
-        scheduler || (scheduler = timeoutScheduler);
-        var source = this;
-        return new AnonymousObservable(function (observer) {
-            var open = false,
-                t = scheduler.scheduleWithAbsolute(startTime, function () { open = true; }),
-                d = source.subscribe(function (x) {
-                    if (open) {
-                        observer.onNext(x);
-                    }
-                }, observer.onError.bind(observer), observer.onCompleted.bind(observer));
-
-            return new CompositeDisposable(t, d);
-        });
-    };
-
-    /**
-     *  Takes elements for the specified duration until the specified end time, using the specified scheduler to run timers.
-     *  
-     * @example
-     *  1 - res = source.takeUntilWithTime(new Date(), [optional scheduler]);   
-     * @param {Number} endTime Time to stop taking elements from the source sequence. If this value is less than or equal to new Date(), the result stream will complete immediately.
-     * @param {Scheduler} scheduler Scheduler to run the timer on.
-     * @returns {Observable} An observable sequence with the elements taken until the specified end time.
-     */
-    observableProto.takeUntilWithTime = function (endTime, scheduler) {
-        scheduler || (scheduler = timeoutScheduler);
-        var source = this;
-        return new AnonymousObservable(function (observer) {
-            return new CompositeDisposable(scheduler.scheduleWithAbsolute(endTime, function () {
-                observer.onCompleted();
-            }),  source.subscribe(observer));
-        });
-    };
+  }(Observable));
 
   /**
    * Pauses the underlying observable sequence based upon the observable sequence which yields true/false.
@@ -4678,23 +4652,7 @@
    * @returns {Observable} The observable sequence which is paused based upon the pauser.
    */
   observableProto.pausable = function (pauser) {
-    var self = this;
-    return new AnonymousObservable(function (observer) {
-      var conn = self.publish(),
-        subscription = conn.subscribe(observer),
-        connection = disposableEmpty;
-
-      var pausable = pauser.distinctUntilChanged().subscribe(function (b) {
-        if (b) {
-          connection = conn.connect();
-        } else {
-          connection.dispose();
-          connection = disposableEmpty;
-        }
-      });
-
-      return new CompositeDisposable(subscription, connection, pausable);
-    });
+    return new PausableObservable(this, pauser);
   };
   function combineLatestSource(source, subject, resultSelector) {
     return new AnonymousObservable(function (observer) {
@@ -4709,15 +4667,15 @@
         var res;
         hasValue[i] = true;
         if (hasValueAll || (hasValueAll = hasValue.every(identity))) {
-            try {
-                res = resultSelector.apply(null, values);
-            } catch (ex) {
-                observer.onError(ex);
-                return;
-            }
-            observer.onNext(res);
+          try {
+            res = resultSelector.apply(null, values);
+          } catch (ex) {
+            observer.onError(ex);
+            return;
+          }
+          observer.onNext(res);
         } else if (isDone) {
-            observer.onCompleted();
+          observer.onCompleted();
         }
       }
 
@@ -4740,24 +4698,17 @@
     });
   }
 
-  /**
-   * Pauses the underlying observable sequence based upon the observable sequence which yields true/false,
-   * and yields the values that were buffered while paused.
-   * @example
-   * var pauser = new Rx.Subject();
-   * var source = Rx.Observable.interval(100).pausableBuffered(pauser);
-   * @param {Observable} pauser The observable sequence used to pause the underlying sequence.
-   * @returns {Observable} The observable sequence which is paused based upon the pauser.
-   */  
-  observableProto.pausableBuffered = function (subject) {
-    var source = this;
-    return new AnonymousObservable(function (observer) {
+  var PausableBufferedObservable = (function (_super) {
+
+    inherits(PausableBufferedObservable, _super);
+
+    function subscribe(observer) {
       var q = [], previous = true;
       
       var subscription =  
         combineLatestSource(
-          source,
-          subject.distinctUntilChanged(), 
+          this.source,
+          this.subject.distinctUntilChanged(), 
           function (data, shouldFire) {
             return { data: data, shouldFire: shouldFire };      
           })
@@ -4778,14 +4729,65 @@
               }
 
             }, 
-            observer.onError.bind(observer),
-            observer.onCompleted.bind(observer)
+            function (err) {
+              // Empty buffer before sending error
+              while (q.length > 0) {
+                observer.onNext(q.shift());
+              }
+              observer.onError(err);
+            },
+            function () {
+              // Empty buffer before sending completion
+              while (q.length > 0) {
+                observer.onNext(q.shift());
+              }
+              observer.onCompleted();              
+            }
           );
 
-      subject.onNext(false);
+      this.subject.onNext(false);
 
-      return subscription;
-    });
+      return subscription;      
+    }
+
+    function PausableBufferedObservable(source, subject) {
+      this.source = source;
+      this.subject = subject || new Subject();
+      this.isPaused = true;
+      _super.call(this, subscribe);
+    }
+
+    PausableBufferedObservable.prototype.pause = function () {
+      if (this.isPaused === true){
+        return;
+      }
+      this.isPaused = true;
+      this.subject.onNext(false);
+    };
+
+    PausableBufferedObservable.prototype.resume = function () {
+      if (this.isPaused === false){
+        return;
+      }
+      this.isPaused = false;
+      this.subject.onNext(true);
+    };
+
+    return PausableBufferedObservable; 
+
+  }(Observable));
+
+  /**
+   * Pauses the underlying observable sequence based upon the observable sequence which yields true/false,
+   * and yields the values that were buffered while paused.
+   * @example
+   * var pauser = new Rx.Subject();
+   * var source = Rx.Observable.interval(100).pausableBuffered(pauser);
+   * @param {Observable} pauser The observable sequence used to pause the underlying sequence.
+   * @returns {Observable} The observable sequence which is paused based upon the pauser.
+   */  
+  observableProto.pausableBuffered = function (subject) {
+    return new PausableBufferedObservable(this, subject);
   };
 
   /**
@@ -4949,56 +4951,160 @@
 
         return ControlledSubject;
     }(Observable));
-    var AnonymousObservable = Rx.AnonymousObservable = (function (_super) {
-        inherits(AnonymousObservable, _super);
+  /*
+   * Performs a exclusive waiting for the first to finish before subscribing to another observable.
+   * Observables that come in between subscriptions will be dropped on the floor.
+   * @returns {Observable} A exclusive observable with only the results that happen when subscribed.
+   */
+  observableProto.exclusive = function () {
+    var sources = this;
+    return new AnonymousObservable(function (observer) {
+      var hasCurrent = false,
+        isStopped = false,
+        m = new SingleAssignmentDisposable(),
+        g = new CompositeDisposable();
 
-        // Fix subscriber to check for undefined or function returned to decorate as Disposable
-        function fixSubscriber(subscriber) {
-            if (typeof subscriber === 'undefined') {
-                subscriber = disposableEmpty;
-            } else if (typeof subscriber === 'function') {
-                subscriber = disposableCreate(subscriber);
-            }
+      g.add(m);
 
-            return subscriber;
-        }
+      m.setDisposable(sources.subscribe(
+        function (innerSource) {
+          if (!hasCurrent) {
+            hasCurrent = true;
+            
+            isPromise(innerSource) && (innerSource = observableFromPromise(innerSource));
 
-        function AnonymousObservable(subscribe) {
-            if (!(this instanceof AnonymousObservable)) {
-                return new AnonymousObservable(subscribe);
-            }
+            var innerSubscription = new SingleAssignmentDisposable();
+            g.add(innerSubscription);
 
-            function s(observer) {
-                var autoDetachObserver = new AutoDetachObserver(observer);
-                if (currentThreadScheduler.scheduleRequired()) {
-                    currentThreadScheduler.schedule(function () {
-                        try {
-                            autoDetachObserver.setDisposable(fixSubscriber(subscribe(autoDetachObserver)));
-                        } catch (e) {
-                            if (!autoDetachObserver.fail(e)) {
-                                throw e;
-                            } 
-                        }
-                    });
-                } else {
-                    try {
-                        autoDetachObserver.setDisposable(fixSubscriber(subscribe(autoDetachObserver)));
-                    } catch (e) {
-                        if (!autoDetachObserver.fail(e)) {
-                            throw e;
-                        }
-                    }
+            innerSubscription.setDisposable(innerSource.subscribe(
+              observer.onNext.bind(observer),
+              observer.onError.bind(observer),
+              function () {
+                g.remove(innerSubscription);
+                hasCurrent = false;
+                if (isStopped && g.length === 1) {
+                  observer.onCompleted();
+                }
+            }));
+          }
+        },
+        observer.onError.bind(observer),
+        function () {
+          isStopped = true;
+          if (!hasCurrent && g.length === 1) { 
+            observer.onCompleted();
+          }
+        }));
+
+      return g;
+    });
+  };
+  /*
+   * Performs a exclusive map waiting for the first to finish before subscribing to another observable.
+   * Observables that come in between subscriptions will be dropped on the floor.
+   * @param {Function} selector Selector to invoke for every item in the current subscription.
+   * @param {Any} [thisArg] An optional context to invoke with the selector parameter.
+   * @returns {Observable} An exclusive observable with only the results that happen when subscribed.
+   */
+  observableProto.exclusiveMap = function (selector, thisArg) {
+    var sources = this;
+    return new AnonymousObservable(function (observer) {
+      var index = 0,
+        hasCurrent = false,
+        isStopped = true,
+        m = new SingleAssignmentDisposable(),
+        g = new CompositeDisposable();
+
+      g.add(m);
+
+      m.setDisposable(sources.subscribe(
+        function (innerSource) {
+
+          if (!hasCurrent) {
+            hasCurrent = true;          
+
+            innerSubscription = new SingleAssignmentDisposable();
+            g.add(innerSubscription);
+
+            isPromise(innerSource) && (innerSource = observableFromPromise(innerSource));      
+
+            innerSubscription.setDisposable(innerSource.subscribe(
+              function (x) {
+                var result;
+                try {
+                  result = selector.call(thisArg, x, index++, innerSource);
+                } catch (e) {
+                  observer.onError(e);
+                  return;
                 }
 
-                return autoDetachObserver;
-            }
+                observer.onNext(result);
+              },
+              observer.onError.bind(observer),
+              function () {
+                g.remove(innerSubscription);
+                hasCurrent = false;
 
-            _super.call(this, s);
+                if (isStopped && g.length === 1) {
+                  observer.onCompleted();
+                }
+              }));
+          }
+        }, 
+        observer.onError.bind(observer),
+        function () {
+          isStopped = true;
+          if (g.length === 1 && !hasCurrent) {
+            observer.onCompleted();
+          }
+        }));
+      return g;
+    });
+  };
+  var AnonymousObservable = Rx.AnonymousObservable = (function (__super__) {
+    inherits(AnonymousObservable, __super__);
+
+    // Fix subscriber to check for undefined or function returned to decorate as Disposable
+    function fixSubscriber(subscriber) {
+      if (subscriber && typeof subscriber.dispose === 'function') { return subscriber; }
+
+      return typeof subscriber === 'function' ?
+        disposableCreate(subscriber) :
+        disposableEmpty;
+    }
+
+    function AnonymousObservable(subscribe) {
+      if (!(this instanceof AnonymousObservable)) {
+        return new AnonymousObservable(subscribe);
+      }
+
+      function s(observer) {
+        var setDisposable = function () {
+          try {
+            autoDetachObserver.setDisposable(fixSubscriber(subscribe(autoDetachObserver)));
+          } catch (e) {
+            if (!autoDetachObserver.fail(e)) {
+              throw e;
+            } 
+          }
+        };
+
+        var autoDetachObserver = new AutoDetachObserver(observer);
+        if (currentThreadScheduler.scheduleRequired()) {
+          currentThreadScheduler.schedule(setDisposable);
+        } else {
+          setDisposable();
         }
 
-        return AnonymousObservable;
+        return autoDetachObserver;
+      }
 
-    }(Observable));
+      __super__.call(this, s);
+    }
+
+    return AnonymousObservable;
+
+  }(Observable));
 
     /** @private */
     var AutoDetachObserver = (function (_super) {
@@ -5312,50 +5418,29 @@
         return AsyncSubject;
     }(Observable));
 
-    /** @private */
-    var AnonymousSubject = (function (_super) {
-        inherits(AnonymousSubject, _super);
+  var AnonymousSubject = Rx.AnonymousSubject = (function (__super__) {
+    inherits(AnonymousSubject, __super__);
 
-        function subscribe(observer) {
-            return this.observable.subscribe(observer);
-        }
+    function AnonymousSubject(observer, observable) {
+      this.observer = observer;
+      this.observable = observable;      
+      __super__.call(this, this.observable.subscribe.bind(this.observable));
+    }
 
-        /**
-         * @private
-         * @constructor
-         */
-        function AnonymousSubject(observer, observable) {
-            _super.call(this, subscribe);
-            this.observer = observer;
-            this.observable = observable;
-        }
+    addProperties(AnonymousSubject.prototype, Observer, {
+      onCompleted: function () {
+        this.observer.onCompleted();
+      },            
+      onError: function (exception) {
+        this.observer.onError(exception);
+      },            
+      onNext: function (value) {
+        this.observer.onNext(value);
+      }
+    });
 
-        addProperties(AnonymousSubject.prototype, Observer, {
-            /**
-             * @private
-             * @memberOf AnonymousSubject#
-            */
-            onCompleted: function () {
-                this.observer.onCompleted();
-            },
-            /**
-             * @private
-             * @memberOf AnonymousSubject#
-            */            
-            onError: function (exception) {
-                this.observer.onError(exception);
-            },
-            /**
-             * @private
-             * @memberOf AnonymousSubject#
-            */            
-            onNext: function (value) {
-                this.observer.onNext(value);
-            }
-        });
-
-        return AnonymousSubject;
-    }(Observable));
+    return AnonymousSubject;
+  }(Observable));
 
     /**
      *  Represents a value that changes over time.

@@ -1,7 +1,7 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 2013
-VisualStudioVersion = 12.0.21005.1
+VisualStudioVersion = 12.0.30723.0
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Phone", "Phone", "{654005CE-4F35-4960-B8D3-48D02DF651C0}"
 EndProject
@@ -67,12 +67,12 @@ Project("{E24C65DC-7377-472B-9ABA-BC803B73C61A}") = "RxJs.Website", "RxJs.Websit
 		SlnRelativePath = "RxJs.Website\"
 	EndProjectSection
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Dice", "..\RX\Dice\Dice\Dice.csproj", "{8CD64B05-AE45-49FB-A09B-32EDCD6DAEA2}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Dice", "Dice\Dice\Dice.csproj", "{8CD64B05-AE45-49FB-A09B-32EDCD6DAEA2}"
 	ProjectSection(ProjectDependencies) = postProject
 		{718F914C-7300-4AD0-92B3-3CDEF3FE753D} = {718F914C-7300-4AD0-92B3-3CDEF3FE753D}
 	EndProjectSection
 EndProject
-Project("{F184B08F-C81C-45F6-A57F-5ABD9991F28F}") = "Gestures", "..\RX\Dice\Gestures\Gestures.vbproj", "{CA4A1896-91E9-41FB-9879-14992CF56158}"
+Project("{F184B08F-C81C-45F6-A57F-5ABD9991F28F}") = "Gestures", "Dice\Gestures\Gestures.vbproj", "{CA4A1896-91E9-41FB-9879-14992CF56158}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PhoneTranslator", "WP7RxSamples\PhoneTranslator\PhoneTranslator\PhoneTranslator.csproj", "{6EE54875-9095-4D53-B403-EE7C45E31BC4}"
 EndProject
@@ -80,7 +80,7 @@ Project("{F184B08F-C81C-45F6-A57F-5ABD9991F28F}") = "BasicConsole", "SignalR\RxS
 EndProject
 Project("{E24C65DC-7377-472B-9ABA-BC803B73C61A}") = "RxSignalrWeb(1)", "SignalR\RxSignalR\RxSignalrWeb\", "{227B78EB-FD4A-44FC-89AC-6EE2C461C4CC}"
 	ProjectSection(WebsiteProperties) = preProject
-		TargetFrameworkMoniker = ".NETFramework,Version%3Dv4.5"
+		TargetFrameworkMoniker = ".NETFramework,Version%3Dv4.5.1"
 		Debug.AspNetCompiler.VirtualPath = "/RxSignalrWeb"
 		Debug.AspNetCompiler.PhysicalPath = "SignalR\RxSignalR\RxSignalrWeb\"
 		Debug.AspNetCompiler.TargetPath = "PrecompiledWeb\RxSignalrWeb\"
@@ -110,20 +110,27 @@ Project("{E24C65DC-7377-472B-9ABA-BC803B73C61A}") = "Service(1)", "http://localh
 		UseIISExpress = "true"
 		TargetFrameworkMoniker = ".NETFramework,Version%3Dv4.0"
 		Debug.AspNetCompiler.VirtualPath = "/Service"
-		Debug.AspNetCompiler.PhysicalPath = "..\RX\Dice\Service\"
+		Debug.AspNetCompiler.PhysicalPath = "Dice\Service\"
 		Debug.AspNetCompiler.TargetPath = "PrecompiledWeb\Service\"
 		Debug.AspNetCompiler.Updateable = "true"
 		Debug.AspNetCompiler.ForceOverwrite = "true"
 		Debug.AspNetCompiler.FixedNames = "false"
 		Debug.AspNetCompiler.Debug = "True"
 		Release.AspNetCompiler.VirtualPath = "/Service"
-		Release.AspNetCompiler.PhysicalPath = "..\RX\Dice\Service\"
+		Release.AspNetCompiler.PhysicalPath = "Dice\Service\"
 		Release.AspNetCompiler.TargetPath = "PrecompiledWeb\Service\"
 		Release.AspNetCompiler.Updateable = "true"
 		Release.AspNetCompiler.ForceOverwrite = "true"
 		Release.AspNetCompiler.FixedNames = "false"
 		Release.AspNetCompiler.Debug = "False"
-		SlnRelativePath = "..\RX\Dice\Service\"
+		SlnRelativePath = "Dice\Service\"
+	EndProjectSection
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = ".nuget", ".nuget", "{142DE7CE-89E3-46B0-8C96-05037DF82E2C}"
+	ProjectSection(SolutionItems) = preProject
+		.nuget\NuGet.Config = .nuget\NuGet.Config
+		.nuget\NuGet.exe = .nuget\NuGet.exe
+		.nuget\NuGet.targets = .nuget\NuGet.targets
 	EndProjectSection
 EndProject
 Global
@@ -406,9 +413,9 @@ Global
 		{8CD64B05-AE45-49FB-A09B-32EDCD6DAEA2} = {654005CE-4F35-4960-B8D3-48D02DF651C0}
 		{CA4A1896-91E9-41FB-9879-14992CF56158} = {654005CE-4F35-4960-B8D3-48D02DF651C0}
 		{6EE54875-9095-4D53-B403-EE7C45E31BC4} = {654005CE-4F35-4960-B8D3-48D02DF651C0}
-		{718F914C-7300-4AD0-92B3-3CDEF3FE753D} = {654005CE-4F35-4960-B8D3-48D02DF651C0}
 		{DB4DE111-4C53-43E0-894A-5D3B0C54A782} = {7C61DDDD-7E55-4867-9AB1-D37323DC02DE}
 		{227B78EB-FD4A-44FC-89AC-6EE2C461C4CC} = {7C61DDDD-7E55-4867-9AB1-D37323DC02DE}
 		{D24BD347-374B-4304-8C76-0D8008651FC9} = {7C61DDDD-7E55-4867-9AB1-D37323DC02DE}
+		{718F914C-7300-4AD0-92B3-3CDEF3FE753D} = {654005CE-4F35-4960-B8D3-48D02DF651C0}
 	EndGlobalSection
 EndGlobal

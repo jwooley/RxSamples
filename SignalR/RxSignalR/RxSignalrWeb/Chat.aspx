@@ -5,8 +5,8 @@
 <html xmlns="http://www.w3.org/1999/xhtml">
 <head runat="server">
     <title></title>
-    <script src="Scripts/jquery-2.1.0.js"></script>
-    <script src="Scripts/jquery.signalR-0.5.2.min.js"></script>
+    <script src="Scripts/jquery-2.1.1.js"></script>
+    <script src="Scripts/jquery.signalR-2.1.1.min.js"></script>
     <script src="/signalr/hubs" type="text/javascript"></script>
     <script type="text/javascript">
         $(function () {
@@ -14,17 +14,19 @@
             var chat = $.connection.chat;
 
             // Declare a function on the chat hub so the server can invoke it
-            chat.addMessage = function (message) {
+            chat.client.addMessage = function (message) {
                 $('#messages').append('<li>' + message + '</li>');
             };
 
-            $("#broadcast").click(function () {
-                // Call the chat method on the server
-                chat.send($('#msg').val());
-            });
 
             // Start the connection
-            $.connection.hub.start();
+            $.connection.hub.start()
+             .then(function() {
+                $("#broadcast").click(function () {
+                    // Call the chat method on the server
+                    chat.server.send($('#msg').val());
+                });
+            });
         });
     </script>
 </head>

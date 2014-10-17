@@ -1,7 +1,0 @@
-﻿<Solution Format="0.0.0.3">
-  <Version>2013-12-02T01:56:18.7205654Z</Version>
-  <Project Path="C:\Projects\RX\Dice\Dice\Dice.csproj">
-    <Reference Path="C:\Projects\RX\Dice\Gestures\Gestures.vbproj" />
-  </Project>
-  <Project Path="C:\Projects\RX\Dice\Gestures\Gestures.vbproj" />
-</Solution>

@@ -1,10 +1,10 @@
-﻿Imports Microsoft.VisualBasic
-Imports SignalR.Hubs
+﻿Imports Microsoft.AspNet.SignalR
+Imports Microsoft.VisualBasic
 
 Public Class ObservableSensorHub
     Inherits Hub
 
     Public Sub SaySomething(something As String)
-        Clients.someoneSaid(something)
+        Clients.All.someoneSaid(something)
     End Sub
 End Class

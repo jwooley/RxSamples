@@ -2,9 +2,9 @@
 using System.Collections.ObjectModel;
 using System.Linq;
 using System.Windows;
-using SignalR.Client.Hubs;
 using System.Reactive.Linq;
 using Newtonsoft.Json;
+using Microsoft.AspNet.SignalR.Client;
 
 namespace WpfSharp
 {
@@ -30,7 +30,7 @@ namespace WpfSharp
             var hubConnection = new HubConnection("http://localhost:4734/");
 
             // Create a proxy to the chat service
-            var chat = hubConnection.CreateProxy("observableSensorHub");
+            var chat = hubConnection.CreateHubProxy("observableSensorHub");
 
             // Print the message when it comes in
             //chat.On<SensorData>("broadcast", value =>

@@ -1,8 +1,8 @@
 ﻿Option Strict Off
 
 Imports Microsoft.VisualBasic
+Imports Microsoft.AspNet.SignalR
 Imports System.Reactive.Linq
-Imports SignalR
 
 Public Class ObservableSensor
 
@@ -28,7 +28,7 @@ Public Class ObservableSensor
         Generator.Subscribe(Sub(value)
                                 Dim context = GlobalHost.ConnectionManager.
                                     GetHubContext(Of ObservableSensorHub)()
-                                context.Clients.Broadcast(value)
+                                context.Clients.All.Broadcast(value)
                             End Sub)
     End Sub
 End Class
