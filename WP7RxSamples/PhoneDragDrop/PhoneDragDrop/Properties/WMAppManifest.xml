@@ -1,5 +1,5 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
-<Deployment xmlns="http://schemas.microsoft.com/windowsphone/2012/deployment" AppPlatformVersion="8.0">
+<Deployment xmlns="http://schemas.microsoft.com/windowsphone/2014/deployment" AppPlatformVersion="8.1">
   <DefaultLanguage xmlns="" code="" />
   <App xmlns="" ProductID="{55be7aab-99bd-41de-87eb-0fd64cdbe957}" Title="PhoneDragDrop" RuntimeType="Silverlight" Version="1.0.0.0" Genre="apps.normal" Author="PhoneDragDrop author" Description="Sample description" Publisher="PhoneDragDrop" PublisherID="{a63336a9-bdc2-4764-b51b-d9fb015c62fa}">
     <IconPath IsRelative="true" IsResource="false">ApplicationIcon.png</IconPath>

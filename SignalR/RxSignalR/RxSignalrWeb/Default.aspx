@@ -5,8 +5,9 @@
 <html xmlns="http://www.w3.org/1999/xhtml">
 <head runat="server">
     <title></title>
-    <script src="Scripts/jquery-2.1.1.js"></script>
-    <script src="Scripts/jquery.signalR-2.1.1.js" type="text/javascript"></script>
+    <script src="Scripts/jquery-2.2.4.js"></script>
+    <script src="Scripts/jquery.signalR-2.2.0.js"></script>
+
     <script src="/signalr/hubs" type="text/javascript"></script>
     <script type="text/javascript">
         $(function () {

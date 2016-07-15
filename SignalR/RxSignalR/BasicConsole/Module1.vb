@@ -1,5 +1,5 @@
 ﻿Option Strict Off
-
+Imports System.Linq
 Imports System.Reactive.Linq
 Imports Microsoft.AspNet.SignalR.Client
 Imports Newtonsoft.Json.Linq

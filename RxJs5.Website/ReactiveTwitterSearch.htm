@@ -1,0 +1,83 @@
+﻿<!DOCTYPE HTML>
+<html lang="en">
+<head>
+    <meta http-equiv="Content-type" content="text/html; charset=utf-8">
+    <title>async queue</title>
+    <style type="text/css">
+        body
+        {
+            margin: 0;
+            padding: 0;
+            font-family: 'lucida grande' , lucida, helvetica, arial;
+        }
+        #doc
+        {
+            width: 600px;
+            margin: 0 auto;
+        }
+        pre
+        {
+            font-family: 'courier new' , courier, monospace;
+            padding: 20px;
+            font-size: 16px;
+        }
+        #content
+        {
+            font-size: 18px;
+            padding: 10px;
+            border: 1px solid #ccc;
+            -moz-border-radius: 10px;
+        }
+    </style>
+    <script type="text/javascript" src="Scripts/jquery-1.4.1.min.js"></script>
+    <script type="text/javascript" src="Scripts/rx.js"></script>
+    <script type="text/javascript" src="Scripts/rx.jquery.js"></script>
+    <script type="text/javascript">
+    		(function($) {
+            			Array.prototype.toObservable = function(scheduler) {
+                        				return Rx.Observable.FromArray(this, scheduler);
+                        }
+                        
+                        var customDelayScheduler = function(delay) {
+                        				 return new Rx.Scheduler(
+                                         	 	function(action) {
+                                                		var id = window.setTimeout(action, delay);
+                                                        return Rx.Disposable.Create(function() { window.clearTimeout(id); });
+                                                },
+                                                function(action, dueTime) {
+                                                		var id = window.setTimeout(action, dueTime);
+                                                        return Rx.Disposable.Create(function() { window.clearTimeout(id); });
+                                                },
+                                                function() {
+                                                		return new Date().getTime();
+                                                });
+                        }
+                        $.fn.fetch = function(url, onError) {
+                        		var collection = this;
+                                var onNext = function(d) { $(collection).fadeTo(200, 1.0).html(d.text).fadeTo(200, 0.5); }
+                                var observer = onError ? Rx.Observer.Create(onNext, onError) : onNext;
+                                var delayedScheduler = customDelayScheduler(5000);
+                                $.ajaxAsObservable({
+                                		url: url,
+                                        type: 'get',
+                                        dataType: 'jsonp'
+                                })
+                                		.SelectMany(function(d) { return d.data.results.toObservable(delayedScheduler); })
+                                        .Subscribe(observer);
+                                return this;
+                        };
+                 })(jQuery);
+         $(document).ready(function() {
+                 $("<p/>").fetch("http://search.twitter.com/search.json?q=DevLink&rpp=100").addClass("loading").appendTo("#content");
+         });
+    </script>
+</head>
+<body>
+    <div id="doc">
+        <p>
+            Latest twitter search mentioning <b>DevLink</b>:</p>
+        <div id="content">
+        </div>
+    </div>
+</body>
+</html>

@@ -1,5 +1,5 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
-<Deployment xmlns="http://schemas.microsoft.com/windowsphone/2012/deployment" AppPlatformVersion="8.0">
+<Deployment xmlns="http://schemas.microsoft.com/windowsphone/2014/deployment" AppPlatformVersion="8.1">
   <DefaultLanguage xmlns="" code="" />
   <App xmlns="" ProductID="{294d32c9-ce0d-4ede-958a-a777a8ea51ef}" Title="Dice" RuntimeType="Silverlight" Version="1.0.0.0" Genre="apps.normal" Author="Dice author" Description="Sample description" Publisher="Dice" PublisherID="{ad30b586-1dfd-4d32-8499-ccb6968910c3}">
     <IconPath IsRelative="true" IsResource="false">ApplicationIcon.png</IconPath>

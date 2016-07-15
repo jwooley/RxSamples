@@ -1,0 +1,12 @@
+{
+  "name": "rxjsweb",
+  "version": "1.0.0",
+  "description": "RxJs Samples",
+  "main": "index.js",
+  "author": "Jim Wooley",
+  "license": "ISC",
+  "dependencies": {
+    "jquery": "3.1.0",
+    "rxjs": "5.0.0-beta.10"
+  }
+}

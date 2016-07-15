@@ -1,5 +1,5 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
-<Deployment xmlns="http://schemas.microsoft.com/windowsphone/2012/deployment" AppPlatformVersion="8.0">
+<Deployment xmlns="http://schemas.microsoft.com/windowsphone/2014/deployment" AppPlatformVersion="8.1">
   <DefaultLanguage xmlns="" code="" />
   <App xmlns="" ProductID="{72654e39-e468-4ea5-a4c5-dcd82dc3ea1d}" Title="WP7AccelerometerSample" RuntimeType="Silverlight" Version="1.0.0.0" Genre="apps.normal" Author="WP7AccelerometerSample author" Description="Sample description" Publisher="WP7AccelerometerSample" PublisherID="{79ffc757-4614-48e1-b07c-c00d67b6cf54}">
     <IconPath IsRelative="true" IsResource="false">ApplicationIcon.png</IconPath>

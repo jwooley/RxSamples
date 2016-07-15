@@ -1,5 +1,5 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
-<Deployment xmlns="http://schemas.microsoft.com/windowsphone/2012/deployment" AppPlatformVersion="8.0">
+<Deployment xmlns="http://schemas.microsoft.com/windowsphone/2014/deployment" AppPlatformVersion="8.1">
   <DefaultLanguage xmlns="" code="" />
   <App xmlns="" ProductID="{2fcfcfc8-67c8-4cac-9235-ba880dbd83cb}" Title="PhoneTranslator" RuntimeType="Silverlight" Version="1.0.0.0" Genre="apps.normal" Author="PhoneTranslator author" Description="Sample description" Publisher="PhoneTranslator" PublisherID="{8bd37f3c-5ba6-4f54-9ebc-3fb3a91fa22c}">
     <IconPath IsRelative="true" IsResource="false">ApplicationIcon.png</IconPath>

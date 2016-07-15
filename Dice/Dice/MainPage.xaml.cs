@@ -60,8 +60,8 @@ namespace Dice
         //private void RollClick(object sender, RoutedEventArgs e)
         private void SetupObservable()
         {
-            RandomizerService.IRandomizer proxy = new RandomizerService.RandomizerClient();
-            var svcObservable = Observable.FromAsyncPattern<int, int>(proxy.BeginRoll, proxy.EndRoll);
+            //RandomizerService.IRandomizer proxy = new RandomizerService.RandomizerClient();
+            //var svcObservable = Observable.FromAsyncPattern<int, int>(proxy.BeginRoll, proxy.EndRoll);
 
             var rollDetected = Observable.FromEvent<RoutedEventArgs>(RollButton, "Click").Select(_=> new Unit())
                 .Merge(App.ViewModel.DiceCountDataSource.Select(_ => new Unit()))
@@ -73,8 +73,8 @@ namespace Dice
                 .Where(die => !die.Frozen)
                 .ObserveOnDispatcher()
                 .Do(die => die.DotCount = null)
-                from result in Randomizer.RollAsync(App.ViewModel.SideCount).ToObservable()
-                select new { die, rolledDots = result };
+                //from result in Randomizer.RollAsync(App.ViewModel.SideCount).ToObservable()
+                select new { die, rolledDots = Randomizer.Roll(App.ViewModel.SideCount) };
 
             _diceObserver = roll.ObserveOnDispatcher().Subscribe(
                 result => result.die.DotCount = result.rolledDots,
@@ -98,8 +98,8 @@ namespace Dice
 
         private void SetupObservableFinished()
         {
-            RandomizerService.IRandomizer svc = new RandomizerService.RandomizerClient();
-            var svcObserver = Observable.FromAsyncPattern<int, int>(svc.BeginRoll, svc.EndRoll);
+            //RandomizerService.IRandomizer svc = new RandomizerService.RandomizerClient();
+            //var svcObserver = Observable.FromAsyncPattern<int, int>(svc.BeginRoll, svc.EndRoll);
 
             var rollDetected = Observable.FromEvent<RoutedEventArgs>(RollButton, "Click")
                 .Select(_ => new Unit())
@@ -115,9 +115,9 @@ namespace Dice
                 .ObserveOnDispatcher()
                 .Do(die => die.DotCount = null)
                 //.ObserveOn(Scheduler.ThreadPool)
-                from result in svcObserver(App.ViewModel.DiceCount)
+                //from result in Randomizer. svcObserver(App.ViewModel.DiceCount)
                 .TakeUntil(rollDetected)
-                select new { die, rolledDots = result };
+                select new { die, rolledDots = Randomizer.Roll(App.ViewModel.DiceCount)};
 
             _diceObserver = query.ObserveOnDispatcher()
                 .Subscribe(result => result.die.DotCount = result.rolledDots,

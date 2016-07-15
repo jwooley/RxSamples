@@ -1,7 +1,7 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio 2013
-VisualStudioVersion = 12.0.30723.0
+# Visual Studio 14
+VisualStudioVersion = 14.0.25420.1
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Phone", "Phone", "{654005CE-4F35-4960-B8D3-48D02DF651C0}"
 EndProject
@@ -78,9 +78,9 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PhoneTranslator", "WP7RxSam
 EndProject
 Project("{F184B08F-C81C-45F6-A57F-5ABD9991F28F}") = "BasicConsole", "SignalR\RxSignalR\BasicConsole\BasicConsole.vbproj", "{DB4DE111-4C53-43E0-894A-5D3B0C54A782}"
 EndProject
-Project("{E24C65DC-7377-472B-9ABA-BC803B73C61A}") = "RxSignalrWeb(1)", "SignalR\RxSignalR\RxSignalrWeb\", "{227B78EB-FD4A-44FC-89AC-6EE2C461C4CC}"
+Project("{E24C65DC-7377-472B-9ABA-BC803B73C61A}") = "RxSignalrWeb", "SignalR\RxSignalR\RxSignalrWeb\", "{227B78EB-FD4A-44FC-89AC-6EE2C461C4CC}"
 	ProjectSection(WebsiteProperties) = preProject
-		TargetFrameworkMoniker = ".NETFramework,Version%3Dv4.5.1"
+		TargetFrameworkMoniker = ".NETFramework,Version%3Dv4.6.1"
 		Debug.AspNetCompiler.VirtualPath = "/RxSignalrWeb"
 		Debug.AspNetCompiler.PhysicalPath = "SignalR\RxSignalR\RxSignalrWeb\"
 		Debug.AspNetCompiler.TargetPath = "PrecompiledWeb\RxSignalrWeb\"
@@ -131,6 +131,27 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = ".nuget", ".nuget", "{142DE7
 		.nuget\NuGet.Config = .nuget\NuGet.Config
 		.nuget\NuGet.exe = .nuget\NuGet.exe
 		.nuget\NuGet.targets = .nuget\NuGet.targets
+	EndProjectSection
+EndProject
+Project("{E24C65DC-7377-472B-9ABA-BC803B73C61A}") = "RxJs5.Website", "RxJs5.Website\", "{20BAF637-6D79-4630-A589-E02319BA559F}"
+	ProjectSection(WebsiteProperties) = preProject
+		TargetFrameworkMoniker = ".NETFramework,Version%3Dv4.0"
+		Debug.AspNetCompiler.VirtualPath = "/localhost_5715"
+		Debug.AspNetCompiler.PhysicalPath = "RxJs5.Website\"
+		Debug.AspNetCompiler.TargetPath = "PrecompiledWeb\localhost_5715\"
+		Debug.AspNetCompiler.Updateable = "true"
+		Debug.AspNetCompiler.ForceOverwrite = "true"
+		Debug.AspNetCompiler.FixedNames = "false"
+		Debug.AspNetCompiler.Debug = "True"
+		Release.AspNetCompiler.VirtualPath = "/localhost_5715"
+		Release.AspNetCompiler.PhysicalPath = "RxJs5.Website\"
+		Release.AspNetCompiler.TargetPath = "PrecompiledWeb\localhost_5715\"
+		Release.AspNetCompiler.Updateable = "true"
+		Release.AspNetCompiler.ForceOverwrite = "true"
+		Release.AspNetCompiler.FixedNames = "false"
+		Release.AspNetCompiler.Debug = "False"
+		VWDPort = "5715"
+		SlnRelativePath = "RxJs5.Website\"
 	EndProjectSection
 EndProject
 Global
@@ -403,6 +424,26 @@ Global
 		{718F914C-7300-4AD0-92B3-3CDEF3FE753D}.Release|Mixed Platforms.Build.0 = Debug|Any CPU
 		{718F914C-7300-4AD0-92B3-3CDEF3FE753D}.Release|x64.ActiveCfg = Debug|Any CPU
 		{718F914C-7300-4AD0-92B3-3CDEF3FE753D}.Release|x86.ActiveCfg = Debug|Any CPU
+		{20BAF637-6D79-4630-A589-E02319BA559F}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{20BAF637-6D79-4630-A589-E02319BA559F}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{20BAF637-6D79-4630-A589-E02319BA559F}.Debug|ARM.ActiveCfg = Debug|Any CPU
+		{20BAF637-6D79-4630-A589-E02319BA559F}.Debug|ARM.Build.0 = Debug|Any CPU
+		{20BAF637-6D79-4630-A589-E02319BA559F}.Debug|Mixed Platforms.ActiveCfg = Debug|Any CPU
+		{20BAF637-6D79-4630-A589-E02319BA559F}.Debug|Mixed Platforms.Build.0 = Debug|Any CPU
+		{20BAF637-6D79-4630-A589-E02319BA559F}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{20BAF637-6D79-4630-A589-E02319BA559F}.Debug|x64.Build.0 = Debug|Any CPU
+		{20BAF637-6D79-4630-A589-E02319BA559F}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{20BAF637-6D79-4630-A589-E02319BA559F}.Debug|x86.Build.0 = Debug|Any CPU
+		{20BAF637-6D79-4630-A589-E02319BA559F}.Release|Any CPU.ActiveCfg = Debug|Any CPU
+		{20BAF637-6D79-4630-A589-E02319BA559F}.Release|Any CPU.Build.0 = Debug|Any CPU
+		{20BAF637-6D79-4630-A589-E02319BA559F}.Release|ARM.ActiveCfg = Debug|Any CPU
+		{20BAF637-6D79-4630-A589-E02319BA559F}.Release|ARM.Build.0 = Debug|Any CPU
+		{20BAF637-6D79-4630-A589-E02319BA559F}.Release|Mixed Platforms.ActiveCfg = Debug|Any CPU
+		{20BAF637-6D79-4630-A589-E02319BA559F}.Release|Mixed Platforms.Build.0 = Debug|Any CPU
+		{20BAF637-6D79-4630-A589-E02319BA559F}.Release|x64.ActiveCfg = Debug|Any CPU
+		{20BAF637-6D79-4630-A589-E02319BA559F}.Release|x64.Build.0 = Debug|Any CPU
+		{20BAF637-6D79-4630-A589-E02319BA559F}.Release|x86.ActiveCfg = Debug|Any CPU
+		{20BAF637-6D79-4630-A589-E02319BA559F}.Release|x86.Build.0 = Debug|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
