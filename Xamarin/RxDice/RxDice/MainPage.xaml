@@ -1,0 +1,33 @@
+﻿<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://xamarin.com/schemas/2014/forms"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             x:Class="RxDice.MainPage">
+
+    <StackLayout>
+        <Label Text="How many Dice?" FontSize="40" HorizontalOptions="Center" />
+        <Stepper Value="{Binding DiceCount}" HorizontalOptions="Center"
+         Minimum="3" 
+         Maximum="10" 
+         Increment="1" 
+          />
+        <Label Text="How many Sides?" FontSize="40" HorizontalOptions="Center" />
+        <Stepper Value="{Binding SideCount}" HorizontalOptions="Center"
+         Minimum="4" 
+         Maximum="20" 
+         Increment="1" 
+          />
+        <Button Text="Roll 'Em" x:Name="btnRoll" />
+
+        <CollectionView ItemsSource="{Binding Dice}" >
+            <CollectionView.ItemTemplate>
+                <DataTemplate>
+                    <StackLayout Orientation="Horizontal" Padding="5,5,5,5" >
+                        <CheckBox IsChecked="{Binding Frozen}" />
+                        <Label Text="{Binding DotCount}" FontSize="32" />
+                    </StackLayout>
+                </DataTemplate>
+            </CollectionView.ItemTemplate>
+        </CollectionView>
+    </StackLayout>
+
+</ContentPage>

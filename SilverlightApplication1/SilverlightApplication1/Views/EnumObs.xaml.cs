@@ -42,21 +42,17 @@ namespace SilverlightApplication1.Views
         private void Observable_Click(object sender, RoutedEventArgs e)
         {
             Stopwatch sw = new Stopwatch();
-            ObservableCollection<int> nums = new ObservableCollection<int>();
-            Results.ItemsSource = nums;
 
             sw.Start();
-            var query = Observable.Range(1, 10).SubscribeOn(NewThreadScheduler.Default)
+            var query = Enumerable.Range(1, 10)
                 .Where(num => num % 2 == 0)
                 .Do(num => Thread.SpinWait((10 - num) * 10000000))
-                .ObserveOnDispatcher()
-                .Subscribe(num => nums.Add(num),
-                    () =>
-            {
-                sw.Stop();
+                .ToList();
 
-                TotalTime.Text = "Total Time: " + sw.ElapsedTicks.ToString("n");
-            }) ;
+            sw.Stop();
+
+            Results.ItemsSource = query;
+            TotalTime.Text = "Total Time: " + sw.ElapsedTicks.ToString("n");
 
         }
 

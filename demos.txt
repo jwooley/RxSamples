@@ -1,0 +1,14 @@
+Enum to Observable - linqpad
+sensor - linqpad
+
+click - BPM - Winform
+doubleclick - rxjs
+file watcher - winform
+
+drag drop - WPF
+
+xamarin - RxDice
+	ShakeObserver
+
+Translator - Winform
+

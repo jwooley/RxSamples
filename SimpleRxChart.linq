@@ -1,7 +1,7 @@
 <Query Kind="VBProgram">
   <Reference>&lt;RuntimeDirectory&gt;\System.Windows.Forms.DataVisualization.dll</Reference>
   <Reference>&lt;RuntimeDirectory&gt;\System.Windows.Forms.dll</Reference>
-  <NuGetReference>Rx-Main</NuGetReference>
+  <NuGetReference>System.Reactive</NuGetReference>
   <Namespace>System.Reactive.Linq</Namespace>
   <Namespace>System.Windows.Forms.DataVisualization.Charting</Namespace>
 </Query>
@@ -19,9 +19,6 @@ Sub Main
         values.Subscribe(Sub(valObs)
                              valObs.s.Subscribe(Sub(val) valObs.series.Points.AddXY(val.TimeStamp, val.SensorValue))
                          End Sub)
-	
-	
-	
 	
 '	dim series As New Series With { 
 '		.ChartType = SeriesChartType.Line,

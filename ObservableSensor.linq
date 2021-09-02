@@ -1,38 +1,38 @@
 <Query Kind="VBProgram">
   <Reference>&lt;RuntimeDirectory&gt;\System.Runtime.dll</Reference>
-  <NuGetReference>Rx-Main</NuGetReference>
+  <NuGetReference>System.Reactive</NuGetReference>
   <Namespace>System.Reactive.Linq</Namespace>
   <Namespace>System.Runtime</Namespace>
 </Query>
 
 Sub Main
-	dim sensor = GetSensor()
+	Dim sensor = GetSensor()
 	
-	sensor.DumpLive("All Values")
+	sensor.DumpLatest("All Values")
 	
-	Dim Q1 = From s in sensor
+	Dim Q1 = From s In sensor
 			Where s.SensorValue < 3
 			Select s
 	
-	Q1.DumpLive("Low Value Sensors")
+	Q1.DumpLatest("Low Value Sensors")
 	
-	Dim Q2 = From s in sensor
-			Where s.SensorType = "3"
+	Dim Q2 = From s In sensor
+			Where s.SensorType = "2"
 			Select s
 			
-	Q2.DumpLive("Type 3 Sensors")
+	Q2.DumpLatest("Type 2 Sensors")
 	
-	Dim Heartbeat = (from s in sensor
+	Dim Heartbeat = (From s In sensor
 		Where s.SensorType = "2").
 		Buffer(TimeSpan.FromSeconds(3)).
-		Select(Function(b) b.Count).
-		DumpLive("Total Last 3 Seconds")
+		Select(Function(b) b.Count * 20).
+		DumpLatest("Approximate 2's per minute")
 		
 	Dim GroupTest = 
 		sensor.
-		GroupBy(function(s) s.SensorType).
-		Select(function(s) s.DumpLive(s.Key)).
-		DumpLive
+		GroupBy(Function(s) s.SensorType).
+		Select(Function(s) s.DumpLatest(True)).
+		DumpLatest(true)
 			
 End Sub
 
@@ -41,24 +41,23 @@ Public Class SensorInfo
     Public Property TimeStamp As DateTime
     Public Property SensorType As String
     Public Property SensorValue As Double
-	
-	public overrides Function ToString() as String
+	Public Overrides Function ToString() As String
 	    Return String.Format("Time: {0}  , Type: {1}  Value: {2}", TimeStamp, SensorType, SensorValue)
 	End Function
 End Class
 
-Public Function GetSensor() as IObservable(Of SensorInfo)
-	Dim rnd = new Random(Date.Now.Millisecond)
-	Return Observable.Generate(Of Int16, SensorInfo)( _
-		initialState:=0,
+Public Function GetSensor() As IObservable(Of SensorInfo)
+	Dim rnd = New Random(Date.Now.Millisecond)
+	Return Observable.Generate(Of Double, SensorInfo)( 
+		initialState:=0.0,
 		condition:=Function(x) True,
-		iterate:= Function(inVal) inval,
-		resultSelector:= Function(x)
-				Dim randValue = rnd.NextDouble
-				return new SensorInfo with {.SensorType = (math.Floor(randValue * 4) + 1).ToString,
-					.SensorValue = randValue * 20,
+		iterate:= Function(inVal) rnd.NextDouble,
+		resultSelector:= Function(val)
+				Return New SensorInfo With {
+					.SensorType = (math.Floor(val * 4) + 1).ToString,
+					.SensorValue = rnd.NextDouble * 20,
 					.TimeStamp = DateTime.Now}
-			end Function,
-		timeSelector := Function(x) TimeSpan.FromMilliseconds(rnd.NextDouble * 500)
+			End Function,
+		timeSelector := Function(val) TimeSpan.FromMilliseconds(val * 100)
 	)
 End Function

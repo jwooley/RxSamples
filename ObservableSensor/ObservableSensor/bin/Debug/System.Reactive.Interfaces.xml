@@ -16,72 +16,30 @@
             and to write unit tests for functionality built using Reactive Extensions constructs.
             </summary>
         </member>
-        <member name="T:System.Reactive.Disposables.NamespaceDoc">
-            <summary>
-            The <b>System.Reactive.Disposables</b> namespace contains interfaces and classes that provide a compositional set of constructs used to deal with resource and subscription
-            management in Reactive Extensions. Those types are used extensively within the implementation of Reactive Extensions and are useful when writing custom query operators or
-            schedulers.
-            </summary>
-        </member>
-        <member name="T:System.Reactive.Linq.NamespaceDoc">
-            <summary>
-            The <b>System.Reactive.Linq</b> namespace contains interfaces and classes that support expressing queries over observable sequences, using Language Integrated Query (LINQ).
-            Query operators are made available as extension methods for IObservable&lt;T&gt; and IQbservable&lt;T&gt; defined on the Observable and Qbservable classes, respectively.
-            </summary>
-        </member>
-        <member name="T:System.Reactive.Subjects.NamespaceDoc">
-            <summary>
-            The <b>System.Reactive.Subjects</b> namespace contains interfaces and classes to represent subjects, which are objects implementing both IObservable&lt;T&gt; and IObserver&lt;T&gt;.
-            Subjects are often used as sources of events, allowing one party to raise events and allowing another party to write queries over the event stream. Because of their ability to
-            have multiple registered observers, subjects are also used as a facility to provide multicast behavior for event streams in queries.
-            </summary>
-        </member>
-        <member name="T:System.Reactive.Concurrency.ISchedulerPeriodic">
-            <summary>
-            Scheduler with support for running periodic tasks.
-            This type of scheduler can be used to run timers more efficiently instead of using recursive scheduling.
-            </summary>
-        </member>
-        <member name="M:System.Reactive.Concurrency.ISchedulerPeriodic.SchedulePeriodic``1(``0,System.TimeSpan,System.Func{``0,``0})">
-            <summary>
-            Schedules a periodic piece of work.
-            </summary>
-            <typeparam name="TState">The type of the state passed to the scheduled action.</typeparam>
-            <param name="state">Initial state passed to the action upon the first iteration.</param>
-            <param name="period">Period for running the work periodically.</param>
-            <param name="action">Action to be executed, potentially updating the state.</param>
-            <returns>The disposable object used to cancel the scheduled recurring action (best effort).</returns>
-        </member>
-        <member name="T:System.Reactive.Concurrency.IStopwatchProvider">
-            <summary>
-            Provider for IStopwatch objects.
-            </summary>
-        </member>
-        <member name="M:System.Reactive.Concurrency.IStopwatchProvider.StartStopwatch">
-            <summary>
-            Starts a new stopwatch object.
-            </summary>
-            <returns>New stopwatch object; started at the time of the request.</returns>
-        </member>
         <member name="T:System.Reactive.Concurrency.IScheduledItem`1">
             <summary>
             Represents a work item that has been scheduled.
             </summary>
             <typeparam name="TAbsolute">Absolute time representation type.</typeparam>
         </member>
-        <member name="M:System.Reactive.Concurrency.IScheduledItem`1.Invoke">
-            <summary>
-            Invokes the work item.
-            </summary>
-        </member>
         <member name="P:System.Reactive.Concurrency.IScheduledItem`1.DueTime">
             <summary>
             Gets the absolute time at which the item is due for invocation.
             </summary>
         </member>
+        <member name="M:System.Reactive.Concurrency.IScheduledItem`1.Invoke">
+            <summary>
+            Invokes the work item.
+            </summary>
+        </member>
         <member name="T:System.Reactive.Concurrency.IScheduler">
             <summary>
             Represents an object that schedules units of work.
+            </summary>
+        </member>
+        <member name="P:System.Reactive.Concurrency.IScheduler.Now">
+            <summary>
+            Gets the scheduler's notion of current time.
             </summary>
         </member>
         <member name="M:System.Reactive.Concurrency.IScheduler.Schedule``1(``0,System.Func{System.Reactive.Concurrency.IScheduler,``0,System.IDisposable})">
@@ -113,11 +71,6 @@
             <param name="dueTime">Absolute time at which to execute the action.</param>
             <returns>The disposable object used to cancel the scheduled action (best effort).</returns>
         </member>
-        <member name="P:System.Reactive.Concurrency.IScheduler.Now">
-            <summary>
-            Gets the scheduler's notion of current time.
-            </summary>
-        </member>
         <member name="T:System.Reactive.Concurrency.ISchedulerLongRunning">
             <summary>
             Scheduler with support for starting long-running tasks.
@@ -137,6 +90,22 @@
             The returned disposable object should not prevent the work from starting, but only set the cancellation flag passed to the specified action.
             </remarks>
         </member>
+        <member name="T:System.Reactive.Concurrency.ISchedulerPeriodic">
+            <summary>
+            Scheduler with support for running periodic tasks.
+            This type of scheduler can be used to run timers more efficiently instead of using recursive scheduling.
+            </summary>
+        </member>
+        <member name="M:System.Reactive.Concurrency.ISchedulerPeriodic.SchedulePeriodic``1(``0,System.TimeSpan,System.Func{``0,``0})">
+            <summary>
+            Schedules a periodic piece of work.
+            </summary>
+            <typeparam name="TState">The type of the state passed to the scheduled action.</typeparam>
+            <param name="state">Initial state passed to the action upon the first iteration.</param>
+            <param name="period">Period for running the work periodically.</param>
+            <param name="action">Action to be executed, potentially updating the state.</param>
+            <returns>The disposable object used to cancel the scheduled recurring action (best effort).</returns>
+        </member>
         <member name="T:System.Reactive.Concurrency.IStopwatch">
             <summary>
             Abstraction for a stopwatch to compute time relative to a starting point.
@@ -147,15 +116,140 @@
             Gets the time elapsed since the stopwatch object was obtained.
             </summary>
         </member>
+        <member name="T:System.Reactive.Concurrency.IStopwatchProvider">
+            <summary>
+            Provider for IStopwatch objects.
+            </summary>
+        </member>
+        <member name="M:System.Reactive.Concurrency.IStopwatchProvider.StartStopwatch">
+            <summary>
+            Starts a new stopwatch object.
+            </summary>
+            <returns>New stopwatch object; started at the time of the request.</returns>
+        </member>
+        <member name="T:System.Reactive.Disposables.NamespaceDoc">
+            <summary>
+            The <b>System.Reactive.Disposables</b> namespace contains interfaces and classes that provide a compositional set of constructs used to deal with resource and subscription
+            management in Reactive Extensions. Those types are used extensively within the implementation of Reactive Extensions and are useful when writing custom query operators or
+            schedulers.
+            </summary>
+        </member>
         <member name="T:System.Reactive.Disposables.ICancelable">
             <summary>
-            Disposable resource with dipsosal state tracking.
+            Disposable resource with disposal state tracking.
             </summary>
         </member>
         <member name="P:System.Reactive.Disposables.ICancelable.IsDisposed">
             <summary>
             Gets a value that indicates whether the object is disposed.
             </summary>
+        </member>
+        <member name="T:System.Reactive.Linq.NamespaceDoc">
+            <summary>
+            The <b>System.Reactive.Linq</b> namespace contains interfaces and classes that support expressing queries over observable sequences, using Language Integrated Query (LINQ).
+            Query operators are made available as extension methods for IObservable&lt;T&gt; and IQbservable&lt;T&gt; defined on the Observable and Qbservable classes, respectively.
+            </summary>
+        </member>
+        <member name="T:System.Reactive.Linq.IGroupedObservable`2">
+            <summary>
+            Represents an observable sequence of elements that have a common key.
+            </summary>
+            <typeparam name="TKey">
+            The type of the key shared by all elements in the group.
+            This type parameter is covariant. That is, you can use either the type you specified or any type that is more derived. For more information about covariance and contravariance, see Covariance and Contravariance in Generics.
+            </typeparam>
+            <typeparam name="TElement">
+            The type of the elements in the group.
+            This type parameter is covariant. That is, you can use either the type you specified or any type that is more derived. For more information about covariance and contravariance, see Covariance and Contravariance in Generics.
+            </typeparam>
+        </member>
+        <member name="P:System.Reactive.Linq.IGroupedObservable`2.Key">
+            <summary>
+            Gets the common key.
+            </summary>
+        </member>
+        <member name="T:System.Reactive.Linq.IQbservable`1">
+            <summary>
+            Provides functionality to evaluate queries against a specific data source wherein the type of the data is known.
+            </summary>
+            <typeparam name="T">
+            The type of the data in the data source.
+            This type parameter is covariant. That is, you can use either the type you specified or any type that is more derived. For more information about covariance and contravariance, see Covariance and Contravariance in Generics.
+            </typeparam>
+        </member>
+        <member name="T:System.Reactive.Linq.IQbservable">
+            <summary>
+            Provides functionality to evaluate queries against a specific data source wherein the type of the data is not specified.
+            </summary>
+        </member>
+        <member name="P:System.Reactive.Linq.IQbservable.ElementType">
+            <summary>
+            Gets the type of the element(s) that are returned when the expression tree associated with this instance of IQbservable is executed.
+            </summary>
+        </member>
+        <member name="P:System.Reactive.Linq.IQbservable.Expression">
+            <summary>
+            Gets the expression tree that is associated with the instance of IQbservable.
+            </summary>
+        </member>
+        <member name="P:System.Reactive.Linq.IQbservable.Provider">
+            <summary>
+            Gets the query provider that is associated with this data source.
+            </summary>
+        </member>
+        <member name="T:System.Reactive.Linq.IQbservableProvider">
+            <summary>
+            Defines methods to create and execute queries that are described by an IQbservable object.
+            </summary>
+        </member>
+        <member name="M:System.Reactive.Linq.IQbservableProvider.CreateQuery``1(System.Linq.Expressions.Expression)">
+            <summary>
+            Constructs an IQbservable&gt;TResult&lt; object that can evaluate the query represented by a specified expression tree.
+            </summary>
+            <typeparam name="TResult">The type of the elements of the System.Reactive.Linq.IQbservable&lt;T&gt; that is returned.</typeparam>
+            <param name="expression">Expression tree representing the query.</param>
+            <returns>IQbservable object that can evaluate the given query expression.</returns>
+        </member>
+        <member name="T:System.Reactive.Subjects.NamespaceDoc">
+            <summary>
+            The <b>System.Reactive.Subjects</b> namespace contains interfaces and classes to represent subjects, which are objects implementing both IObservable&lt;T&gt; and IObserver&lt;T&gt;.
+            Subjects are often used as sources of events, allowing one party to raise events and allowing another party to write queries over the event stream. Because of their ability to
+            have multiple registered observers, subjects are also used as a facility to provide multicast behavior for event streams in queries.
+            </summary>
+        </member>
+        <member name="T:System.Reactive.Subjects.IConnectableObservable`1">
+            <summary>
+            Represents an observable wrapper that can be connected and disconnected from its underlying observable sequence.
+            </summary>
+            <typeparam name="T">
+            The type of the elements in the sequence.
+            This type parameter is covariant. That is, you can use either the type you specified or any type that is more derived. For more information about covariance and contravariance, see Covariance and Contravariance in Generics.
+            </typeparam>
+        </member>
+        <member name="M:System.Reactive.Subjects.IConnectableObservable`1.Connect">
+            <summary>
+            Connects the observable wrapper to its source. All subscribed observers will receive values from the underlying observable sequence as long as the connection is established.
+            </summary>
+            <returns>Disposable used to disconnect the observable wrapper from its source, causing subscribed observer to stop receiving values from the underlying observable sequence.</returns>
+        </member>
+        <member name="T:System.Reactive.Subjects.ISubject`1">
+            <summary>
+            Represents an object that is both an observable sequence as well as an observer.
+            </summary>
+            <typeparam name="T">The type of the elements processed by the subject.</typeparam>
+        </member>
+        <member name="T:System.Reactive.Subjects.ISubject`2">
+            <summary>
+            Represents an object that is both an observable sequence as well as an observer.
+            </summary>
+            <typeparam name="TSource">
+            The type of the elements received by the subject.
+            This type parameter is contravariant. That is, you can use either the type you specified or any type that is less derived. For more information about covariance and contravariance, see Covariance and Contravariance in Generics.
+            </typeparam>
+            <typeparam name="TResult">
+            The type of the elements produced by the subject.
+            This type parameter is covariant. That is, you can use either the type you specified or any type that is more derived. For more information about covariance and contravariance, see Covariance and Contravariance in Generics.
+            </typeparam>
         </member>
         <member name="T:System.Reactive.IEventPattern`2">
             <summary>
@@ -237,100 +331,6 @@
             Notifies the observer of the end of the sequence.
             </summary>
             <returns>Result returned upon observation of the sequence completion.</returns>
-        </member>
-        <member name="T:System.Reactive.Linq.IGroupedObservable`2">
-            <summary>
-            Represents an observable sequence of elements that have a common key.
-            </summary>
-            <typeparam name="TKey">
-            The type of the key shared by all elements in the group.
-            This type parameter is covariant. That is, you can use either the type you specified or any type that is more derived. For more information about covariance and contravariance, see Covariance and Contravariance in Generics.
-            </typeparam>
-            <typeparam name="TElement">
-            The type of the elements in the group.
-            This type parameter is covariant. That is, you can use either the type you specified or any type that is more derived. For more information about covariance and contravariance, see Covariance and Contravariance in Generics.
-            </typeparam>
-        </member>
-        <member name="P:System.Reactive.Linq.IGroupedObservable`2.Key">
-            <summary>
-            Gets the common key.
-            </summary>
-        </member>
-        <member name="T:System.Reactive.Linq.IQbservable`1">
-            <summary>
-            Provides functionality to evaluate queries against a specific data source wherein the type of the data is known.
-            </summary>
-            <typeparam name="T">
-            The type of the data in the data source.
-            This type parameter is covariant. That is, you can use either the type you specified or any type that is more derived. For more information about covariance and contravariance, see Covariance and Contravariance in Generics.
-            </typeparam>
-        </member>
-        <member name="T:System.Reactive.Linq.IQbservable">
-            <summary>
-            Provides functionality to evaluate queries against a specific data source wherein the type of the data is not specified.
-            </summary>
-        </member>
-        <member name="P:System.Reactive.Linq.IQbservable.ElementType">
-            <summary>
-            Gets the type of the element(s) that are returned when the expression tree associated with this instance of IQbservable is executed.
-            </summary>
-        </member>
-        <member name="P:System.Reactive.Linq.IQbservable.Expression">
-            <summary>
-            Gets the expression tree that is associated with the instance of IQbservable.
-            </summary>
-        </member>
-        <member name="P:System.Reactive.Linq.IQbservable.Provider">
-            <summary>
-            Gets the query provider that is associated with this data source.
-            </summary>
-        </member>
-        <member name="T:System.Reactive.Linq.IQbservableProvider">
-            <summary>
-            Defines methods to create and execute queries that are described by an IQbservable object.
-            </summary>
-        </member>
-        <member name="M:System.Reactive.Linq.IQbservableProvider.CreateQuery``1(System.Linq.Expressions.Expression)">
-            <summary>
-            Constructs an IQbservable&gt;TResult&lt; object that can evaluate the query represented by a specified expression tree.
-            </summary>
-            <typeparam name="TResult">The type of the elements of the System.Reactive.Linq.IQbservable&lt;T&gt; that is returned.</typeparam>
-            <param name="expression">Expression tree representing the query.</param>
-            <returns>IQbservable object that can evaluate the given query expression.</returns>
-        </member>
-        <member name="T:System.Reactive.Subjects.IConnectableObservable`1">
-            <summary>
-            Represents an observable wrapper that can be connected and disconnected from its underlying observable sequence.
-            </summary>
-            <typeparam name="T">
-            The type of the elements in the sequence.
-            This type parameter is covariant. That is, you can use either the type you specified or any type that is more derived. For more information about covariance and contravariance, see Covariance and Contravariance in Generics.
-            </typeparam>
-        </member>
-        <member name="M:System.Reactive.Subjects.IConnectableObservable`1.Connect">
-            <summary>
-            Connects the observable wrapper to its source. All subscribed observers will receive values from the underlying observable sequence as long as the connection is established.
-            </summary>
-            <returns>Disposable used to disconnect the observable wrapper from its source, causing subscribed observer to stop receiving values from the underlying observable sequence.</returns>
-        </member>
-        <member name="T:System.Reactive.Subjects.ISubject`1">
-            <summary>
-            Represents an object that is both an observable sequence as well as an observer.
-            </summary>
-            <typeparam name="T">The type of the elements processed by the subject.</typeparam>
-        </member>
-        <member name="T:System.Reactive.Subjects.ISubject`2">
-            <summary>
-            Represents an object that is both an observable sequence as well as an observer.
-            </summary>
-            <typeparam name="TSource">
-            The type of the elements received by the subject.
-            This type parameter is contravariant. That is, you can use either the type you specified or any type that is less derived. For more information about covariance and contravariance, see Covariance and Contravariance in Generics.
-            </typeparam>
-            <typeparam name="TResult">
-            The type of the elements produced by the subject.
-            This type parameter is covariant. That is, you can use either the type you specified or any type that is more derived. For more information about covariance and contravariance, see Covariance and Contravariance in Generics.
-            </typeparam>
         </member>
     </members>
 </doc>

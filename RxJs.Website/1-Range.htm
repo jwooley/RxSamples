@@ -15,8 +15,8 @@
 
         var nums = Rx.Observable.range(0, 10);
         var query = nums
-                    .where(function (v) { return v % 2 === 0; })
-                    .select(function (v) { return v; });
+                    .filter(function (v) { return v % 2 === 0; })
+                    .map(function (v) { return v; });
 
 
         var sub = query.subscribe(function (v) { label.innerHTML += v; },

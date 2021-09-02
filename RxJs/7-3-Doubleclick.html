@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width">
+  <title>timer</title>
+</head> 
+<body>
+  <a href='https://jsbin.com/gerabewata/edit?js,console,output'>Test demo</a>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/rxjs/7.3.0/rxjs.umd.min.js"></script>
+  <script>
+
+// TS Import syntax
+import {fromEvent, tap, timeInterval, filter, debounceTime} from rxjs;
+
+// Syntax for importing modules for jsbin
+//var { fromEvent , tap, timeInterval, filter, debounceTime} = rxjs
+
+const clicks =  
+  fromEvent(document, 'click')
+    .pipe(
+      tap(() => console.log("clicked")),
+      timeInterval(),
+      filter(x => x.interval < 250),
+      debounceTime(250)     
+    ).subscribe(t => console.log('double Clicking'));
+</script>
+
+  </body>
+</html>

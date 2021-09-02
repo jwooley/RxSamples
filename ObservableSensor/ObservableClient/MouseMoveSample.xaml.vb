@@ -21,5 +21,19 @@ Class MouseMoveSample
                         Canvas.SetTop(image, value.Y)
                     End Sub)
 
+        q.Delay(TimeSpan.FromMilliseconds(250)).
+            ObserveOnDispatcher().
+            Subscribe(Sub(value)
+                          Canvas.SetLeft(image2, value.X)
+                          Canvas.SetTop(image2, value.Y)
+                      End Sub)
+
+        q.Throttle(TimeSpan.FromMilliseconds(250)).
+            ObserveOnDispatcher().
+            Subscribe(Sub(value)
+                          Canvas.SetLeft(image3, value.X)
+                          Canvas.SetTop(image3, value.Y)
+                      End Sub)
+
     End Sub
 End Class

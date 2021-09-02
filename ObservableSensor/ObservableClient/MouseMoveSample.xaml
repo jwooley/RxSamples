@@ -8,6 +8,19 @@
       Title="MouseMoveSample">
     <Canvas>
         <TextBlock x:Name="TopText" Text="Rx Rocks!" />
+        <Image x:Name="image2" 
+               Source="Logo.png"
+               Width="100"
+               Height="100"
+               Canvas.Left="0"
+               Canvas.Top="25" />
+        <Image x:Name="image3" 
+               Source="Logo.png"
+               Width="100"
+               Height="100"
+               Canvas.Left="0"
+               Canvas.Top="25"
+               Opacity=".25"/>
         <Image x:Name="image" 
                Source="Rx_symbol.png"
                Width="100"
