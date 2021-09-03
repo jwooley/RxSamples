@@ -107,7 +107,7 @@ namespace WinFormsSharp
         // See the Bing translator service quickstart to get your own subscription key
         // https://docs.microsoft.com/en-us/azure/cognitive-services/translator/quickstart-translator?tabs=csharp 
         #region secrets
-        private static readonly string subscriptionKey = "***REMOVED***";
+        private static readonly string subscriptionKey = "UseTheLinkAboveToGetYourKey";
         private static readonly string endpoint = "https://api.cognitive.microsofttranslator.com/";
         // Add your location, also known as region. The default is global.
         // This is required if using a Cognitive Services resource.
